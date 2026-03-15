@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thi thử - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html" class="active">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Thi thử</h1>
+            
+            <div class="exam-categories">
+                <div class="category-card" onclick="location.href='danh-sach-de.html?type=monthly'">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Thi thử hàng tháng</h3>
+                    <p>Đề thi mới nhất theo từng tháng</p>
+                </div>
+                <div class="category-card" onclick="location.href='danh-sach-de.html?type=final'">
+                    <i class="fas fa-flag-checkered"></i>
+                    <h3>Thi thử cuối kỳ</h3>
+                    <p>Ôn tập chuẩn bị cho kỳ thi</p>
+                </div>
+                <div class="category-card" onclick="location.href='danh-sach-de.html?type=entrance'">
+                    <i class="fas fa-graduation-cap"></i>
+                    <h3>Thi thử chuyển cấp</h3>
+                    <p>Luyện thi vào lớp 6</p>
+                </div>
+            </div>
+
+            <h2>Đề thi phổ biến</h2>
+            <div class="exams-list" id="examsList">
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=toan-5-1'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Toán lớp 5 - Tháng 3</h4>
+                        <p><i class="far fa-clock"></i> 45 phút - <i class="far fa-file-alt"></i> 30 câu</p>
+                        <p class="exam-meta">Đã có 1,234 lượt làm</p>
+                    </div>
+                    <span class="exam-tag">Mới</span>
+                </div>
+                
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=toan-5-2'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Toán lớp 5 - Tháng 2</h4>
+                        <p><i class="far fa-clock"></i> 45 phút - <i class="far fa-file-alt"></i> 30 câu</p>
+                        <p class="exam-meta">Đã có 987 lượt làm</p>
+                    </div>
+                    <span class="exam-tag">Hot</span>
+                </div>
+                
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=van-5-1'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Tiếng Việt lớp 5 - Tháng 3</h4>
+                        <p><i class="far fa-clock"></i> 40 phút - <i class="far fa-file-alt"></i> 25 câu</p>
+                        <p class="exam-meta">Đã có 756 lượt làm</p>
+                    </div>
+                </div>
+                
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=anh-5-1'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Tiếng Anh lớp 5 - Tháng 3</h4>
+                        <p><i class="far fa-clock"></i> 50 phút - <i class="far fa-file-alt"></i> 35 câu</p>
+                        <p class="exam-meta">Đã có 543 lượt làm</p>
+                    </div>
+                    <span class="exam-tag">Mới</span>
+                </div>
+                
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=toan-4-1'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Toán lớp 4 - Tháng 3</h4>
+                        <p><i class="far fa-clock"></i> 40 phút - <i class="far fa-file-alt"></i> 25 câu</p>
+                        <p class="exam-meta">Đã có 432 lượt làm</p>
+                    </div>
+                </div>
+                
+                <div class="exam-item" onclick="location.href='bai-tap.html?exam=van-4-1'">
+                    <div class="exam-info">
+                        <h4>Đề thi thử Tiếng Việt lớp 4 - Tháng 3</h4>
+                        <p><i class="far fa-clock"></i> 35 phút - <i class="far fa-file-alt"></i> 20 câu</p>
+                        <p class="exam-meta">Đã có 321 lượt làm</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

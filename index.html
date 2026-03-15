@@ -2,509 +2,230 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Facebook</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: -apple-system, Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background: #f0f2f5;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        /* CHỈNH CHO MOBILE */
-        .container {
-            width: 100%;
-            padding: 16px;
-        }
-
-        /* Logo to đùng cho mobile */
-        .logo {
-            text-align: center;
-            margin: 30px 0 20px;
-        }
-
-        .logo img {
-            width: 60px;
-            height: 60px;
-        }
-
-        .logo h1 {
-            color: #1877f2;
-            font-size: 40px;
-            font-weight: 600;
-        }
-
-        /* Form đăng nhập mobile */
-        .login-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 16px;
-            border: 1px solid #dddfe2;
-            border-radius: 8px;
-            font-size: 16px;
-            background: #f5f6f7;
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: #1877f2;
-            background: white;
-        }
-
-        .login-btn {
-            width: 100%;
-            background: #1877f2;
-            color: white;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-
-        .forgot-link {
-            text-align: center;
-            margin: 16px 0;
-        }
-
-        .forgot-link a {
-            color: #1877f2;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .divider {
-            border-bottom: 1px solid #dadde1;
-            margin: 20px 0;
-        }
-
-        .create-btn {
-            background: #42b72a;
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            width: 100%;
-        }
-
-        /* PHẦN VIRUS GIẢ - TỐI ƯU CHO MOBILE */
-        .virus-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: black;
-            z-index: 99999;
-            color: #0f0;
-            font-family: 'Courier New', monospace;
-            padding: 15px;
-            overflow: hidden;
-            touch-action: none; /* Chặn thao tác cảm ứng */
-        }
-
-        .virus-overlay.active {
-            display: block;
-        }
-
-        /* Cảnh báo đỏ */
-        .warning-bar {
-            background: #ff0000;
-            color: white;
-            text-align: center;
-            padding: 8px;
-            font-weight: bold;
-            animation: blinkRed 0.3s infinite;
-            margin: -15px -15px 0 -15px;
-            font-size: 14px;
-        }
-
-        @keyframes blinkRed {
-            0% { background: #ff0000; }
-            50% { background: #8b0000; }
-            100% { background: #ff0000; }
-        }
-
-        /* Thanh tiến trình */
-        .progress-section {
-            margin: 30px 0;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
-            font-size: 14px;
-        }
-
-        .progress-bg {
-            background: #222;
-            height: 30px;
-            border: 1px solid #0f0;
-            border-radius: 0;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #0f0, #ff0, #f00);
-            transition: width 0.1s linear;
-        }
-
-        .percent {
-            font-size: 42px;
-            text-align: center;
-            margin: 20px 0;
-            font-weight: bold;
-            text-shadow: 0 0 10px #0f0;
-        }
-
-        /* Log console */
-        .log-container {
-            background: #111;
-            border: 1px solid #0f0;
-            padding: 12px;
-            height: 250px;
-            overflow-y: hidden;
-            font-size: 13px;
-            line-height: 1.6;
-        }
-
-        .log-line {
-            color: #0f0;
-            margin: 4px 0;
-            border-bottom: 1px dotted #0f0;
-            padding-bottom: 3px;
-            word-break: break-word;
-        }
-
-        .log-line.warning {
-            color: #ff0;
-        }
-
-        .log-line.danger {
-            color: #f00;
-            font-weight: bold;
-        }
-
-        /* Hiệu ứng freeze ẢO nhưng an toàn */
-        .freeze-effect {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 0, 0, 0.1);
-            backdrop-filter: blur(8px);
-            z-index: 100000;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            text-align: center;
-            animation: pulse 0.5s infinite;
-        }
-
-        .freeze-effect.show {
-            display: flex;
-        }
-
-        .freeze-text {
-            font-size: 36px;
-            font-weight: bold;
-            color: #f00;
-            text-shadow: 0 0 20px #f00;
-            margin-bottom: 15px;
-        }
-
-        .freeze-sub {
-            font-size: 16px;
-            color: #fff;
-            background: rgba(0,0,0,0.7);
-            padding: 8px 16px;
-            border-radius: 30px;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; }
-            100% { opacity: 0.8; }
-        }
-
-        /* Nút fake không cho bấm */
-        .no-click {
-            pointer-events: none;
-            opacity: 0.7;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VioEdu - Hệ thống học tập trực tuyến số 1 Việt Nam</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <!-- Trang Facebook giả -->
-    <div class="container" id="facebookPage">
-        <div class="logo">
-            <h1>facebook</h1>
-        </div>
-        
-        <div class="login-card">
-            <div class="input-group">
-                <input type="text" class="input-field" placeholder="Số điện thoại hoặc email" id="username" value="nguoi_dung_99">
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
             </div>
-            <div class="input-group">
-                <input type="password" class="input-field" placeholder="Mật khẩu" id="password" value="••••••••">
+            <div class="nav">
+                <a href="index.html" class="active">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
             </div>
-            
-            <button class="login-btn" id="loginBtn">Đăng nhập</button>
-            
-            <div class="forgot-link">
-                <a href="#">Quên mật khẩu?</a>
+            <div class="user-info">
+                <a href="register.html" class="btn-register">Đăng ký</a>
+                <a href="index.html" class="btn-login-small">Đăng nhập</a>
             </div>
-            
-            <div class="divider"></div>
-            
-            <button class="create-btn">Tạo tài khoản mới</button>
-        </div>
-        
-        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
-            <p>Tiếng Việt · English (UK) · 中文(简体)</p>
-            <p>Meta © 2026</p>
         </div>
     </div>
 
-    <!-- Màn hình virus giả -->
-    <div class="virus-overlay" id="virusOverlay">
-        <div class="warning-bar">
-            ⚠️ CẢNH BÁO: PHÁT HIỆN PHẦN MỀM ĐỘC HẠI ⚠️
-        </div>
-        
-        <div class="progress-section">
-            <div class="progress-label">
-                <span>ĐANG QUÉT HỆ THỐNG</span>
-                <span id="fileCount">0/1337 files</span>
+    <div class="hero-section">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Học tập thông minh cùng VioEdu</h1>
+                <p>Nền tảng học tập trực tuyến số 1 Việt Nam với hơn 5 triệu học sinh</p>
+                <div class="hero-buttons">
+                    <a href="register.html" class="btn-primary">Đăng ký ngay</a>
+                    <a href="khoa-hoc.html" class="btn-secondary">Xem khóa học</a>
+                </div>
             </div>
-            <div class="progress-bg">
-                <div class="progress-fill" id="progressBar"></div>
-            </div>
-        </div>
-        
-        <div class="percent" id="percent">0%</div>
-        
-        <div class="log-container" id="logContainer">
-            <div class="log-line">> Khởi tạo quét bảo mật...</div>
-            <div class="log-line">> Phát hiện bất thường tại hệ thống</div>
-        </div>
-        
-        <div style="margin-top: 15px; font-size: 12px; color: #0f0; text-align: center;">
-            KHÔNG TẮT NGUỒN - ĐANG XỬ LÝ MÃ ĐỘC
         </div>
     </div>
 
-    <!-- Hiệu ứng freeze ẢO (an toàn 100%) -->
-    <div class="freeze-effect" id="freezeEffect">
-        <div class="freeze-text">⚠️ HỆ THỐNG TREO ⚠️</div>
-        <div class="freeze-sub">Đang khôi phục... Vui lòng chờ</div>
+    <div class="features-section">
+        <div class="container">
+            <h2>Tính năng nổi bật</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <i class="fas fa-book-open"></i>
+                    <h3>10.000+ bài giảng</h3>
+                    <p>Chất lượng cao từ lớp 1-5</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-pencil-alt"></i>
+                    <h3>Luyện tập</h3>
+                    <p>Đa dạng bài tập theo từng chủ đề</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-clock"></i>
+                    <h3>Thi thử</h3>
+                    <p>Đề thi sát với chương trình</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Theo dõi tiến độ</h3>
+                    <p>Báo cáo chi tiết kết quả học tập</p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <script>
-        // Lấy elements
-        const loginBtn = document.getElementById('loginBtn');
-        const facebookPage = document.getElementById('facebookPage');
-        const virusOverlay = document.getElementById('virusOverlay');
-        const freezeEffect = document.getElementById('freezeEffect');
-        
-        // Elements cho virus
-        const progressBar = document.getElementById('progressBar');
-        const percentDisplay = document.getElementById('percent');
-        const logContainer = document.getElementById('logContainer');
-        const fileCountSpan = document.getElementById('fileCount');
-        
-        // Biến
-        let percent = 0;
-        let virusInterval;
-        let isFreezing = false;
-        
-        // Mảng log virus
-        const virusLogs = [
-            { text: "> Phát hiện Trojan.Win32.FakeFB", type: "danger" },
-            { text: "> Đang cách ly file hệ thống...", type: "warning" },
-            { text: "> Keylogger phát hiện tại 0x7F3A", type: "danger" },
-            { text: "> Quét RAM: 2.4GB/4GB bị nhiễm", type: "warning" },
-            { text: "> Mã độc đang tự sao chép", type: "danger" },
-            { text: "> Vô hiệu hóa tường lửa Windows", type: "warning" },
-            { text: "> Kết nối C2 Server: 185.142.53.xxx", type: "danger" },
-            { text: "> Đang giải mã dữ liệu người dùng", type: "warning" },
-            { text: "> Thu thập thông tin đăng nhập", type: "danger" },
-            { text: "> Ghi đè MBR...", type: "danger" },
-            { text: "> DỪNG LẠI! Đang xóa system32", type: "danger" },
-            { text: "> KHÔNG THỂ DỪNG QUÁ TRÌNH", type: "danger" },
-            { text: "> 90% file hệ thống bị mã hóa", type: "danger" }
-        ];
-        
-        // Khi bấm nút Đăng nhập
-        loginBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            // Ẩn Facebook, hiện virus
-            facebookPage.style.display = 'none';
-            virusOverlay.classList.add('active');
-            
-            // Bắt đầu chạy virus
-            percent = 0;
-            startVirus();
-        });
-        
-        // Hàm chạy virus
-        function startVirus() {
-            virusInterval = setInterval(function() {
-                if (isFreezing) return; // Nếu đang freeze thì không tăng %
-                
-                percent += Math.floor(Math.random() * 3) + 1; // Tăng 1-3% mỗi lần
-                
-                if (percent >= 100) {
-                    percent = 100;
-                    updateVirusUI();
+    <div class="stats-section">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number">5.2M+</div>
+                    <div class="stat-label">Học sinh</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">52K+</div>
+                    <div class="stat-label">Bài giảng</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">127+</div>
+                    <div class="stat-label">Giáo viên</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Hài lòng</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="courses-preview">
+        <div class="container">
+            <h2>Khóa học phổ biến</h2>
+            <div class="courses-grid">
+                <div class="course-card" onclick="location.href='toan-5.html'">
+                    <div class="course-image">📚</div>
+                    <h3>Toán lớp 5</h3>
+                    <p>28 bài học - Cô Nguyễn Thị Hương</p>
+                    <div class="course-price">499,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                <div class="course-card" onclick="location.href='van-5.html'">
+                    <div class="course-image">📝</div>
+                    <h3>Tiếng Việt lớp 5</h3>
+                    <p>22 bài học - Cô Trần Thị Lan</p>
+                    <div class="course-price">399,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                <div class="course-card" onclick="location.href='anh-5.html'">
+                    <div class="course-image">🇬🇧</div>
+                    <h3>Tiếng Anh lớp 5</h3>
+                    <p>20 bài học - Thầy John Smith</p>
+                    <div class="course-price">599,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="login-section">
+        <div class="container">
+            <div class="login-wrapper">
+                <div class="login-panel">
+                    <h2>Đăng nhập</h2>
+                    <p class="subtitle">Sử dụng tài khoản VioEdu để tiếp tục</p>
                     
-                    // Khi đạt 100% -> FREEZE ẢO 2.5s
-                    triggerFakeFreeze();
-                } else {
-                    updateVirusUI();
-                }
-            }, 150);
-            
-            // Thêm log mới mỗi 0.8s
-            setInterval(function() {
-                if (isFreezing) return; // Không thêm log khi freeze
+                    <div class="alert">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Hệ thống đang bảo trì. Vui lòng đăng nhập lại.</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Tên đăng nhập / Email</label>
+                        <input type="text" id="username" placeholder="Nhập tên đăng nhập" value="hocsinh1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Mật khẩu</label>
+                        <input type="password" id="password" placeholder="••••••••" value="123456">
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" checked> Ghi nhớ đăng nhập
+                        </label>
+                        <a href="#" class="forgot-password">Quên mật khẩu?</a>
+                    </div>
+                    
+                    <button class="btn-login" onclick="handleLogin()">ĐĂNG NHẬP</button>
+                    
+                    <div class="register-link">
+                        Chưa có tài khoản? <a href="register.html">Đăng ký ngay</a>
+                    </div>
+                </div>
                 
-                const randomLog = virusLogs[Math.floor(Math.random() * virusLogs.length)];
-                const logLine = document.createElement('div');
-                logLine.className = `log-line ${randomLog.type}`;
-                logLine.textContent = randomLog.text;
-                logContainer.appendChild(logLine);
-                
-                // Giới hạn log
-                while (logContainer.children.length > 10) {
-                    logContainer.removeChild(logContainer.children[0]);
-                }
-                
-                // Cuộn xuống cuối
-                logContainer.scrollTop = logContainer.scrollHeight;
-            }, 800);
-        }
-        
-        // Update UI virus
-        function updateVirusUI() {
-            progressBar.style.width = percent + '%';
-            percentDisplay.textContent = percent + '%';
-            
-            // Đổi màu theo %
-            if (percent >= 80) {
-                percentDisplay.style.color = '#f00';
-            } else if (percent >= 50) {
-                percentDisplay.style.color = '#ff0';
-            }
-            
-            // Số file đã quét
-            const scanned = Math.floor(percent * 13.37);
-            fileCountSpan.textContent = scanned + '/1337 files';
-        }
-        
-        // Hàm gây FREEZE ẢO (an toàn cho điện thoại)
-        function triggerFakeFreeze() {
-            clearInterval(virusInterval);
-            isFreezing = true;
-            
-            // Dừng cập nhật virus
-            percentDisplay.textContent = '100% - ĐANG XỬ LÝ...';
-            
-            // Hiện hiệu ứng freeze ẢO
-            freezeEffect.classList.add('show');
-            
-            // Chặn thao tác cảm ứng (ảo)
-            virusOverlay.style.pointerEvents = 'none';
-            
-            // Rung nhẹ nếu là điện thoại (tùy chọn)
-            if (navigator.vibrate) {
-                navigator.vibrate([200, 100, 200]);
-            }
-            
-            // Đợi 2.5s
-            setTimeout(function() {
-                // Ẩn freeze
-                freezeEffect.classList.remove('show');
-                
-                // Cho phép thao tác lại
-                virusOverlay.style.pointerEvents = 'auto';
-                
-                // Reset lại để chạy tiếp
-                percent = 0;
-                isFreezing = false;
-                
-                // Xóa log cũ, thêm log mới
-                logContainer.innerHTML = '';
-                addInitialLogs();
-                
-                // Chạy lại virus
-                startVirus();
-                
-                // Rung lần nữa
-                if (navigator.vibrate) {
-                    navigator.vibrate(100);
-                }
-            }, 2500); // 2.5 giây
-        }
-        
-        // Thêm log ban đầu
-        function addInitialLogs() {
-            const initialLogs = [
-                "> KHÔI PHỤC HỆ THỐNG...",
-                "> Phát hiện mã độc mới",
-                "> Tiếp tục quét..."
-            ];
-            
-            initialLogs.forEach(text => {
-                const logLine = document.createElement('div');
-                logLine.className = 'log-line warning';
-                logLine.textContent = text;
-                logContainer.appendChild(logLine);
-            });
-        }
-        
-        // Thêm log ban đầu
-        addInitialLogs();
-        
-        // Ngăn nút back trên mobile (troll thêm)
-        window.addEventListener('popstate', function(e) {
-            if (virusOverlay.classList.contains('active')) {
-                history.pushState(null, null, location.href);
-                alert('⚠️ KHÔNG THỂ THOÁT! Hệ thống đang quét virus');
-            }
-        });
-        history.pushState(null, null, location.href);
-    </script>
+                <div class="info-panel">
+                    <h3>Học tập thông minh cùng VioEdu</h3>
+                    <ul class="features-list">
+                        <li><i class="fas fa-check-circle"></i> Hơn 10.000 bài giảng chất lượng cao</li>
+                        <li><i class="fas fa-check-circle"></i> Lộ trình học tập cá nhân hóa</li>
+                        <li><i class="fas fa-check-circle"></i> Đội ngũ giáo viên giàu kinh nghiệm</li>
+                        <li><i class="fas fa-check-circle"></i> Theo dõi tiến độ học tập chi tiết</li>
+                    </ul>
+                    
+                    <div class="stats-mini">
+                        <div class="stat-mini">
+                            <div class="number">5.2M+</div>
+                            <div class="label">Học sinh</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="number">52K+</div>
+                            <div class="label">Bài giảng</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="number">127+</div>
+                            <div class="label">Giáo viên</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>VioEdu</h4>
+                    <p>Công ty Cổ phần Giáo dục VioEdu</p>
+                    <p>Địa chỉ: Tầng 5, Tòa nhà FPT, Hà Nội</p>
+                    <p>Email: support@vioedu.com</p>
+                    <p>Hotline: 1900 1234</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Liên kết</h4>
+                    <a href="#">Giới thiệu</a>
+                    <a href="#">Điều khoản</a>
+                    <a href="#">Bảo mật</a>
+                    <a href="#">Tuyển dụng</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Hỗ trợ</h4>
+                    <a href="#">Hướng dẫn</a>
+                    <a href="#">Câu hỏi thường gặp</a>
+                    <a href="#">Liên hệ</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Theo dõi chúng tôi</h4>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>© 2025 VioEdu - Hệ thống học tập trực tuyến hàng đầu Việt Nam</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

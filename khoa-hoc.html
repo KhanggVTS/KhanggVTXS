@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khóa học - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html" class="active">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Khóa học</h1>
+            
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label>Lớp:</label>
+                    <select id="filterClass" onchange="filterCourses()">
+                        <option value="all">Tất cả</option>
+                        <option value="1">Lớp 1</option>
+                        <option value="2">Lớp 2</option>
+                        <option value="3">Lớp 3</option>
+                        <option value="4">Lớp 4</option>
+                        <option value="5">Lớp 5</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Môn:</label>
+                    <select id="filterSubject" onchange="filterCourses()">
+                        <option value="all">Tất cả</option>
+                        <option value="toan">Toán</option>
+                        <option value="van">Tiếng Việt</option>
+                        <option value="anh">Tiếng Anh</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="courses-grid" id="coursesList">
+                <!-- Toán lớp 1 -->
+                <div class="course-card" onclick="location.href='toan-1.html'">
+                    <div class="course-image">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Toán lớp 1</h3>
+                    <p class="course-teacher">Cô Nguyễn Thị Hương</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 15 bài</span>
+                        <span><i class="fas fa-users"></i> 1.2K học sinh</span>
+                    </div>
+                    <div class="course-price">299,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Toán lớp 2 -->
+                <div class="course-card" onclick="location.href='toan-2.html'">
+                    <div class="course-image">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Toán lớp 2</h3>
+                    <p class="course-teacher">Cô Trần Thị Lan</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 18 bài</span>
+                        <span><i class="fas fa-users"></i> 1.1K học sinh</span>
+                    </div>
+                    <div class="course-price">349,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Toán lớp 3 -->
+                <div class="course-card" onclick="location.href='toan-3.html'">
+                    <div class="course-image">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Toán lớp 3</h3>
+                    <p class="course-teacher">Thầy Lê Văn Minh</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 22 bài</span>
+                        <span><i class="fas fa-users"></i> 980 học sinh</span>
+                    </div>
+                    <div class="course-price">399,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Toán lớp 4 -->
+                <div class="course-card" onclick="location.href='toan-4.html'">
+                    <div class="course-image">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Toán lớp 4</h3>
+                    <p class="course-teacher">Cô Phạm Thị Dung</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 25 bài</span>
+                        <span><i class="fas fa-users"></i> 870 học sinh</span>
+                    </div>
+                    <div class="course-price">449,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Toán lớp 5 -->
+                <div class="course-card" onclick="location.href='toan-5.html'">
+                    <div class="course-image">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3>Toán lớp 5</h3>
+                    <p class="course-teacher">Cô Nguyễn Thị Hương</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 28 bài</span>
+                        <span><i class="fas fa-users"></i> 1.5K học sinh</span>
+                    </div>
+                    <div class="course-price">499,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Việt lớp 1 -->
+                <div class="course-card" onclick="location.href='van-1.html'">
+                    <div class="course-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Tiếng Việt lớp 1</h3>
+                    <p class="course-teacher">Cô Trần Thị Lan</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 12 bài</span>
+                        <span><i class="fas fa-users"></i> 980 học sinh</span>
+                    </div>
+                    <div class="course-price">249,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Việt lớp 2 -->
+                <div class="course-card" onclick="location.href='van-2.html'">
+                    <div class="course-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Tiếng Việt lớp 2</h3>
+                    <p class="course-teacher">Cô Nguyễn Thị Hương</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 14 bài</span>
+                        <span><i class="fas fa-users"></i> 870 học sinh</span>
+                    </div>
+                    <div class="course-price">299,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Việt lớp 3 -->
+                <div class="course-card" onclick="location.href='van-3.html'">
+                    <div class="course-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Tiếng Việt lớp 3</h3>
+                    <p class="course-teacher">Cô Phạm Thị Dung</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 18 bài</span>
+                        <span><i class="fas fa-users"></i> 760 học sinh</span>
+                    </div>
+                    <div class="course-price">349,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Việt lớp 4 -->
+                <div class="course-card" onclick="location.href='van-4.html'">
+                    <div class="course-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Tiếng Việt lớp 4</h3>
+                    <p class="course-teacher">Thầy Lê Văn Minh</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 20 bài</span>
+                        <span><i class="fas fa-users"></i> 650 học sinh</span>
+                    </div>
+                    <div class="course-price">399,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Việt lớp 5 -->
+                <div class="course-card" onclick="location.href='van-5.html'">
+                    <div class="course-image">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h3>Tiếng Việt lớp 5</h3>
+                    <p class="course-teacher">Cô Trần Thị Lan</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 22 bài</span>
+                        <span><i class="fas fa-users"></i> 890 học sinh</span>
+                    </div>
+                    <div class="course-price">399,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Anh lớp 1 -->
+                <div class="course-card" onclick="location.href='anh-1.html'">
+                    <div class="course-image">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Tiếng Anh lớp 1</h3>
+                    <p class="course-teacher">Thầy John Smith</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 10 bài</span>
+                        <span><i class="fas fa-users"></i> 1.1K học sinh</span>
+                    </div>
+                    <div class="course-price">399,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Anh lớp 2 -->
+                <div class="course-card" onclick="location.href='anh-2.html'">
+                    <div class="course-image">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Tiếng Anh lớp 2</h3>
+                    <p class="course-teacher">Cô Sarah Wilson</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 12 bài</span>
+                        <span><i class="fas fa-users"></i> 980 học sinh</span>
+                    </div>
+                    <div class="course-price">449,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Anh lớp 3 -->
+                <div class="course-card" onclick="location.href='anh-3.html'">
+                    <div class="course-image">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Tiếng Anh lớp 3</h3>
+                    <p class="course-teacher">Thầy John Smith</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 15 bài</span>
+                        <span><i class="fas fa-users"></i> 870 học sinh</span>
+                    </div>
+                    <div class="course-price">499,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Anh lớp 4 -->
+                <div class="course-card" onclick="location.href='anh-4.html'">
+                    <div class="course-image">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Tiếng Anh lớp 4</h3>
+                    <p class="course-teacher">Cô Sarah Wilson</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 18 bài</span>
+                        <span><i class="fas fa-users"></i> 760 học sinh</span>
+                    </div>
+                    <div class="course-price">549,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+                
+                <!-- Tiếng Anh lớp 5 -->
+                <div class="course-card" onclick="location.href='anh-5.html'">
+                    <div class="course-image">
+                        <i class="fas fa-language"></i>
+                    </div>
+                    <h3>Tiếng Anh lớp 5</h3>
+                    <p class="course-teacher">Thầy John Smith</p>
+                    <div class="course-meta">
+                        <span><i class="fas fa-video"></i> 20 bài</span>
+                        <span><i class="fas fa-users"></i> 1.2K học sinh</span>
+                    </div>
+                    <div class="course-price">599,000đ</div>
+                    <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">Mua ngay</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

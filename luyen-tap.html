@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luyện tập - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html" class="active">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name" id="userName">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Luyện tập</h1>
+            
+            <div class="filter-section">
+                <div class="filter-group">
+                    <label>Lớp:</label>
+                    <select id="filterClass" onchange="filterExercises()">
+                        <option value="all">Tất cả</option>
+                        <option value="1">Lớp 1</option>
+                        <option value="2">Lớp 2</option>
+                        <option value="3">Lớp 3</option>
+                        <option value="4">Lớp 4</option>
+                        <option value="5">Lớp 5</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Môn:</label>
+                    <select id="filterSubject" onchange="filterExercises()">
+                        <option value="all">Tất cả</option>
+                        <option value="toan">Toán</option>
+                        <option value="van">Tiếng Việt</option>
+                        <option value="anh">Tiếng Anh</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Trạng thái:</label>
+                    <select id="filterStatus" onchange="filterExercises()">
+                        <option value="all">Tất cả</option>
+                        <option value="pending">Chưa làm</option>
+                        <option value="completed">Đã hoàn thành</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="exercises-grid" id="exercisesList">
+                <!-- Toán lớp 5 -->
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=toan-5-1'">
+                    <div class="exercise-header">
+                        <h3>Phân số - Cơ bản</h3>
+                        <span class="subject-badge toan">Toán 5</span>
+                    </div>
+                    <p>15 câu hỏi - 20 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%"></div>
+                    </div>
+                    <span class="status pending">Chưa làm</span>
+                </div>
+                
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=toan-5-2'">
+                    <div class="exercise-header">
+                        <h3>Phân số - Nâng cao</h3>
+                        <span class="subject-badge toan">Toán 5</span>
+                    </div>
+                    <p>20 câu hỏi - 30 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%"></div>
+                    </div>
+                    <span class="status pending">Chưa làm</span>
+                </div>
+                
+                <!-- Tiếng Việt lớp 5 -->
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=van-5-1'">
+                    <div class="exercise-header">
+                        <h3>Tập làm văn</h3>
+                        <span class="subject-badge van">Tiếng Việt 5</span>
+                    </div>
+                    <p>12 câu hỏi - 25 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%"></div>
+                    </div>
+                    <span class="status pending">Chưa làm</span>
+                </div>
+                
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=van-5-2'">
+                    <div class="exercise-header">
+                        <h3>Chính tả</h3>
+                        <span class="subject-badge van">Tiếng Việt 5</span>
+                    </div>
+                    <p>10 câu hỏi - 15 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 70%"></div>
+                    </div>
+                    <span class="status in-progress">Đang làm (70%)</span>
+                </div>
+                
+                <!-- Tiếng Anh lớp 5 -->
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=anh-5-1'">
+                    <div class="exercise-header">
+                        <h3>Unit 1: Hello</h3>
+                        <span class="subject-badge anh">Tiếng Anh 5</span>
+                    </div>
+                    <p>10 câu hỏi - 15 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 100%"></div>
+                    </div>
+                    <span class="status completed">Hoàn thành (90%)</span>
+                </div>
+                
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=anh-5-2'">
+                    <div class="exercise-header">
+                        <h3>Unit 2: School</h3>
+                        <span class="subject-badge anh">Tiếng Anh 5</span>
+                    </div>
+                    <p>12 câu hỏi - 20 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%"></div>
+                    </div>
+                    <span class="status pending">Chưa làm</span>
+                </div>
+                
+                <!-- Toán lớp 4 -->
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=toan-4-1'">
+                    <div class="exercise-header">
+                        <h3>Phép nhân, chia</h3>
+                        <span class="subject-badge toan">Toán 4</span>
+                    </div>
+                    <p>15 câu hỏi - 20 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 0%"></div>
+                    </div>
+                    <span class="status pending">Chưa làm</span>
+                </div>
+                
+                <!-- Toán lớp 3 -->
+                <div class="exercise-card" onclick="location.href='bai-tap.html?id=toan-3-1'">
+                    <div class="exercise-header">
+                        <h3>Bảng cửu chương</h3>
+                        <span class="subject-badge toan">Toán 3</span>
+                    </div>
+                    <p>20 câu hỏi - 25 phút</p>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 50%"></div>
+                    </div>
+                    <span class="status in-progress">Đang làm (50%)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

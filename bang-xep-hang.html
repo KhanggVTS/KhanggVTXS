@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng xếp hạng - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html" class="active">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Bảng xếp hạng</h1>
+            
+            <div class="ranking-tabs">
+                <button class="ranking-tab active" onclick="switchRanking('week')">Tuần này</button>
+                <button class="ranking-tab" onclick="switchRanking('month')">Tháng này</button>
+                <button class="ranking-tab" onclick="switchRanking('all')">Mọi thời</button>
+            </div>
+
+            <div class="ranking-table-container">
+                <table class="ranking-table">
+                    <thead>
+                        <tr>
+                            <th>Hạng</th>
+                            <th>Học sinh</th>
+                            <th>Lớp</th>
+                            <th>Điểm</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="current-user">
+                            <td>1</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">A</span>
+                                    Nguyễn Văn An
+                                </div>
+                            </td>
+                            <td>5A1</td>
+                            <td>12,500</td>
+                            <td>127h</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">B</span>
+                                    Trần Thị Bình
+                                </div>
+                            </td>
+                            <td>5A2</td>
+                            <td>11,800</td>
+                            <td>115h</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">C</span>
+                                    Lê Văn Cường
+                                </div>
+                            </td>
+                            <td>4A1</td>
+                            <td>11,200</td>
+                            <td>108h</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">D</span>
+                                    Phạm Thị Dung
+                                </div>
+                            </td>
+                            <td>5A1</td>
+                            <td>10,900</td>
+                            <td>102h</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">E</span>
+                                    Hoàng Văn Em
+                                </div>
+                            </td>
+                            <td>5A3</td>
+                            <td>10,500</td>
+                            <td>98h</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">F</span>
+                                    Ngô Thị Phương
+                                </div>
+                            </td>
+                            <td>5A2</td>
+                            <td>10,200</td>
+                            <td>95h</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">G</span>
+                                    Đỗ Văn Quân
+                                </div>
+                            </td>
+                            <td>4A2</td>
+                            <td>9,800</td>
+                            <td>90h</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">H</span>
+                                    Vũ Thị Trang
+                                </div>
+                            </td>
+                            <td>5A1</td>
+                            <td>9,500</td>
+                            <td>87h</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">I</span>
+                                    Lý Văn Sơn
+                                </div>
+                            </td>
+                            <td>4A3</td>
+                            <td>9,200</td>
+                            <td>84h</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>
+                                <div class="rank-user">
+                                    <span class="rank-avatar">K</span>
+                                    Trịnh Thị Hoa
+                                </div>
+                            </td>
+                            <td>5A2</td>
+                            <td>9,000</td>
+                            <td>80h</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

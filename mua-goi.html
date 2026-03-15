@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gói học - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <h1>Chọn gói học phù hợp</h1>
+            <p class="text-center">Mở khóa toàn bộ tính năng học tập không giới hạn</p>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Gói Cơ bản</h3>
+                        <p class="price">199,000đ</p>
+                        <p class="period">/tháng</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 50 bài tập/tháng</li>
+                        <li><i class="fas fa-check"></i> 5 đề thi thử</li>
+                        <li><i class="fas fa-check"></i> Theo dõi tiến độ</li>
+                        <li class="disabled"><i class="fas fa-times"></i> Hỏi đáp với giáo viên</li>
+                        <li class="disabled"><i class="fas fa-times"></i> Bài giảng video</li>
+                    </ul>
+                    <button class="btn-select" onclick="selectPackage('basic')">Chọn gói</button>
+                </div>
+
+                <div class="pricing-card popular">
+                    <div class="popular-tag">Phổ biến nhất</div>
+                    <div class="pricing-header">
+                        <h3>Gói Pro</h3>
+                        <p class="price">399,000đ</p>
+                        <p class="period">/tháng</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 200 bài tập/tháng</li>
+                        <li><i class="fas fa-check"></i> 20 đề thi thử</li>
+                        <li><i class="fas fa-check"></i> Theo dõi tiến độ</li>
+                        <li><i class="fas fa-check"></i> Hỏi đáp với giáo viên</li>
+                        <li><i class="fas fa-check"></i> Bài giảng video</li>
+                    </ul>
+                    <button class="btn-select" onclick="selectPackage('pro')">Chọn gói</button>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>Gói VIP</h3>
+                        <p class="price">799,000đ</p>
+                        <p class="period">/tháng</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> Không giới hạn bài tập</li>
+                        <li><i class="fas fa-check"></i> 50 đề thi thử</li>
+                        <li><i class="fas fa-check"></i> Theo dõi tiến độ</li>
+                        <li><i class="fas fa-check"></i> Hỏi đáp với giáo viên</li>
+                        <li><i class="fas fa-check"></i> Bài giảng video</li>
+                        <li><i class="fas fa-check"></i> Kèm 1-1 với giáo viên</li>
+                    </ul>
+                    <button class="btn-select" onclick="selectPackage('vip')">Chọn gói</button>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h2>Phương thức thanh toán</h2>
+                <div class="payment-grid">
+                    <div class="payment-card" onclick="selectPayment('momo')">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23a50064'/%3E%3Ctext x='25' y='30' text-anchor='middle' fill='white' font-size='12'%3EMoMo%3C/text%3E%3C/svg%3E" alt="MoMo">
+                        <span>Ví MoMo</span>
+                    </div>
+                    <div class="payment-card" onclick="selectPayment('vnpay')">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23003399'/%3E%3Ctext x='25' y='30' text-anchor='middle' fill='white' font-size='12'%3EVNPAY%3C/text%3E%3C/svg%3E" alt="VNPAY">
+                        <span>VNPAY</span>
+                    </div>
+                    <div class="payment-card" onclick="selectPayment('zalopay')">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%230066ff'/%3E%3Ctext x='25' y='30' text-anchor='middle' fill='white' font-size='12'%3EZalo%3C/text%3E%3C/svg%3E" alt="ZaloPay">
+                        <span>ZaloPay</span>
+                    </div>
+                    <div class="payment-card" onclick="selectPayment('bank')">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Ccircle cx='25' cy='25' r='25' fill='%23333'/%3E%3Ctext x='25' y='30' text-anchor='middle' fill='white' font-size='12'%3EATM%3C/text%3E%3C/svg%3E" alt="Bank">
+                        <span>Thẻ ATM nội địa</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
