@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Facebook</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #f0f2f5;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* CHỈNH CHO MOBILE */
+        .container {
+            width: 100%;
+            padding: 16px;
+        }
+
+        /* Logo to đùng cho mobile */
+        .logo {
+            text-align: center;
+            margin: 30px 0 20px;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+        }
+
+        .logo h1 {
+            color: #1877f2;
+            font-size: 40px;
+            font-weight: 600;
+        }
+
+        /* Form đăng nhập mobile */
+        .login-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #dddfe2;
+            border-radius: 8px;
+            font-size: 16px;
+            background: #f5f6f7;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #1877f2;
+            background: white;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #1877f2;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .forgot-link {
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .forgot-link a {
+            color: #1877f2;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .divider {
+            border-bottom: 1px solid #dadde1;
+            margin: 20px 0;
+        }
+
+        .create-btn {
+            background: #42b72a;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            width: 100%;
+        }
+
+        /* PHẦN VIRUS GIẢ - TỐI ƯU CHO MOBILE */
+        .virus-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            z-index: 99999;
+            color: #0f0;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            overflow: hidden;
+            touch-action: none; /* Chặn thao tác cảm ứng */
+        }
+
+        .virus-overlay.active {
+            display: block;
+        }
+
+        /* Cảnh báo đỏ */
+        .warning-bar {
+            background: #ff0000;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-weight: bold;
+            animation: blinkRed 0.3s infinite;
+            margin: -15px -15px 0 -15px;
+            font-size: 14px;
+        }
+
+        @keyframes blinkRed {
+            0% { background: #ff0000; }
+            50% { background: #8b0000; }
+            100% { background: #ff0000; }
+        }
+
+        /* Thanh tiến trình */
+        .progress-section {
+            margin: 30px 0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .progress-bg {
+            background: #222;
+            height: 30px;
+            border: 1px solid #0f0;
+            border-radius: 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0f0, #ff0, #f00);
+            transition: width 0.1s linear;
+        }
+
+        .percent {
+            font-size: 42px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            text-shadow: 0 0 10px #0f0;
+        }
+
+        /* Log console */
+        .log-container {
+            background: #111;
+            border: 1px solid #0f0;
+            padding: 12px;
+            height: 250px;
+            overflow-y: hidden;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .log-line {
+            color: #0f0;
+            margin: 4px 0;
+            border-bottom: 1px dotted #0f0;
+            padding-bottom: 3px;
+            word-break: break-word;
+        }
+
+        .log-line.warning {
+            color: #ff0;
+        }
+
+        .log-line.danger {
+            color: #f00;
+            font-weight: bold;
+        }
+
+        /* Hiệu ứng freeze ẢO nhưng an toàn */
+        .freeze-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 0, 0, 0.1);
+            backdrop-filter: blur(8px);
+            z-index: 100000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            animation: pulse 0.5s infinite;
+        }
+
+        .freeze-effect.show {
+            display: flex;
+        }
+
+        .freeze-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f00;
+            text-shadow: 0 0 20px #f00;
+            margin-bottom: 15px;
+        }
+
+        .freeze-sub {
+            font-size: 16px;
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 30px;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* Nút fake không cho bấm */
+        .no-click {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <!-- Trang Facebook giả -->
+    <div class="container" id="facebookPage">
+        <div class="logo">
+            <h1>facebook</h1>
+        </div>
+        
+        <div class="login-card">
+            <div class="input-group">
+                <input type="text" class="input-field" placeholder="Số điện thoại hoặc email" id="username" value="nguoi_dung_99">
+            </div>
+            <div class="input-group">
+                <input type="password" class="input-field" placeholder="Mật khẩu" id="password" value="••••••••">
+            </div>
+            
+            <button class="login-btn" id="loginBtn">Đăng nhập</button>
+            
+            <div class="forgot-link">
+                <a href="#">Quên mật khẩu?</a>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <button class="create-btn">Tạo tài khoản mới</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #666;">
+            <p>Tiếng Việt · English (UK) · 中文(简体)</p>
+            <p>Meta © 2026</p>
+        </div>
+    </div>
+
+    <!-- Màn hình virus giả -->
+    <div class="virus-overlay" id="virusOverlay">
+        <div class="warning-bar">
+            ⚠️ CẢNH BÁO: PHÁT HIỆN PHẦN MỀM ĐỘC HẠI ⚠️
+        </div>
+        
+        <div class="progress-section">
+            <div class="progress-label">
+                <span>ĐANG QUÉT HỆ THỐNG</span>
+                <span id="fileCount">0/1337 files</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+        </div>
+        
+        <div class="percent" id="percent">0%</div>
+        
+        <div class="log-container" id="logContainer">
+            <div class="log-line">> Khởi tạo quét bảo mật...</div>
+            <div class="log-line">> Phát hiện bất thường tại hệ thống</div>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 12px; color: #0f0; text-align: center;">
+            KHÔNG TẮT NGUỒN - ĐANG XỬ LÝ MÃ ĐỘC
+        </div>
+    </div>
+
+    <!-- Hiệu ứng freeze ẢO (an toàn 100%) -->
+    <div class="freeze-effect" id="freezeEffect">
+        <div class="freeze-text">⚠️ HỆ THỐNG TREO ⚠️</div>
+        <div class="freeze-sub">Đang khôi phục... Vui lòng chờ</div>
+    </div>
+
+    <script>
+        // Lấy elements
+        const loginBtn = document.getElementById('loginBtn');
+        const facebookPage = document.getElementById('facebookPage');
+        const virusOverlay = document.getElementById('virusOverlay');
+        const freezeEffect = document.getElementById('freezeEffect');
+        
+        // Elements cho virus
+        const progressBar = document.getElementById('progressBar');
+        const percentDisplay = document.getElementById('percent');
+        const logContainer = document.getElementById('logContainer');
+        const fileCountSpan = document.getElementById('fileCount');
+        
+        // Biến
+        let percent = 0;
+        let virusInterval;
+        let isFreezing = false;
+        
+        // Mảng log virus
+        const virusLogs = [
+            { text: "> Phát hiện Trojan.Win32.FakeFB", type: "danger" },
+            { text: "> Đang cách ly file hệ thống...", type: "warning" },
+            { text: "> Keylogger phát hiện tại 0x7F3A", type: "danger" },
+            { text: "> Quét RAM: 2.4GB/4GB bị nhiễm", type: "warning" },
+            { text: "> Mã độc đang tự sao chép", type: "danger" },
+            { text: "> Vô hiệu hóa tường lửa Windows", type: "warning" },
+            { text: "> Kết nối C2 Server: 185.142.53.xxx", type: "danger" },
+            { text: "> Đang giải mã dữ liệu người dùng", type: "warning" },
+            { text: "> Thu thập thông tin đăng nhập", type: "danger" },
+            { text: "> Ghi đè MBR...", type: "danger" },
+            { text: "> DỪNG LẠI! Đang xóa system32", type: "danger" },
+            { text: "> KHÔNG THỂ DỪNG QUÁ TRÌNH", type: "danger" },
+            { text: "> 90% file hệ thống bị mã hóa", type: "danger" }
+        ];
+        
+        // Khi bấm nút Đăng nhập
+        loginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Ẩn Facebook, hiện virus
+            facebookPage.style.display = 'none';
+            virusOverlay.classList.add('active');
+            
+            // Bắt đầu chạy virus
+            percent = 0;
+            startVirus();
+        });
+        
+        // Hàm chạy virus
+        function startVirus() {
+            virusInterval = setInterval(function() {
+                if (isFreezing) return; // Nếu đang freeze thì không tăng %
+                
+                percent += Math.floor(Math.random() * 3) + 1; // Tăng 1-3% mỗi lần
+                
+                if (percent >= 100) {
+                    percent = 100;
+                    updateVirusUI();
+                    
+                    // Khi đạt 100% -> FREEZE ẢO 2.5s
+                    triggerFakeFreeze();
+                } else {
+                    updateVirusUI();
+                }
+            }, 150);
+            
+            // Thêm log mới mỗi 0.8s
+            setInterval(function() {
+                if (isFreezing) return; // Không thêm log khi freeze
+                
+                const randomLog = virusLogs[Math.floor(Math.random() * virusLogs.length)];
+                const logLine = document.createElement('div');
+                logLine.className = `log-line ${randomLog.type}`;
+                logLine.textContent = randomLog.text;
+                logContainer.appendChild(logLine);
+                
+                // Giới hạn log
+                while (logContainer.children.length > 10) {
+                    logContainer.removeChild(logContainer.children[0]);
+                }
+                
+                // Cuộn xuống cuối
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }, 800);
+        }
+        
+        // Update UI virus
+        function updateVirusUI() {
+            progressBar.style.width = percent + '%';
+            percentDisplay.textContent = percent + '%';
+            
+            // Đổi màu theo %
+            if (percent >= 80) {
+                percentDisplay.style.color = '#f00';
+            } else if (percent >= 50) {
+                percentDisplay.style.color = '#ff0';
+            }
+            
+            // Số file đã quét
+            const scanned = Math.floor(percent * 13.37);
+            fileCountSpan.textContent = scanned + '/1337 files';
+        }
+        
+        // Hàm gây FREEZE ẢO (an toàn cho điện thoại)
+        function triggerFakeFreeze() {
+            clearInterval(virusInterval);
+            isFreezing = true;
+            
+            // Dừng cập nhật virus
+            percentDisplay.textContent = '100% - ĐANG XỬ LÝ...';
+            
+            // Hiện hiệu ứng freeze ẢO
+            freezeEffect.classList.add('show');
+            
+            // Chặn thao tác cảm ứng (ảo)
+            virusOverlay.style.pointerEvents = 'none';
+            
+            // Rung nhẹ nếu là điện thoại (tùy chọn)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            
+            // Đợi 2.5s
+            setTimeout(function() {
+                // Ẩn freeze
+                freezeEffect.classList.remove('show');
+                
+                // Cho phép thao tác lại
+                virusOverlay.style.pointerEvents = 'auto';
+                
+                // Reset lại để chạy tiếp
+                percent = 0;
+                isFreezing = false;
+                
+                // Xóa log cũ, thêm log mới
+                logContainer.innerHTML = '';
+                addInitialLogs();
+                
+                // Chạy lại virus
+                startVirus();
+                
+                // Rung lần nữa
+                if (navigator.vibrate) {
+                    navigator.vibrate(100);
+                }
+            }, 2500); // 2.5 giây
+        }
+        
+        // Thêm log ban đầu
+        function addInitialLogs() {
+            const initialLogs = [
+                "> KHÔI PHỤC HỆ THỐNG...",
+                "> Phát hiện mã độc mới",
+                "> Tiếp tục quét..."
+            ];
+            
+            initialLogs.forEach(text => {
+                const logLine = document.createElement('div');
+                logLine.className = 'log-line warning';
+                logLine.textContent = text;
+                logContainer.appendChild(logLine);
+            });
+        }
+        
+        // Thêm log ban đầu
+        addInitialLogs();
+        
+        // Ngăn nút back trên mobile (troll thêm)
+        window.addEventListener('popstate', function(e) {
+            if (virusOverlay.classList.contains('active')) {
+                history.pushState(null, null, location.href);
+                alert('⚠️ KHÔNG THỂ THOÁT! Hệ thống đang quét virus');
+            }
+        });
+        history.pushState(null, null, location.href);
+    </script>
+</body>
+</html>
