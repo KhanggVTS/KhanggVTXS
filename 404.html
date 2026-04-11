@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Không tìm thấy trang - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info" id="userInfoArea">
+                <!-- JS sẽ tự động cập nhật nếu đã đăng nhập -->
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="error-404-container">
+                <div class="error-code">404</div>
+                <div class="error-icon">
+                    <i class="fas fa-map-signs"></i>
+                </div>
+                <h1>Oops! Trang không tồn tại</h1>
+                <p class="error-message">Trang bạn đang tìm kiếm có thể đã bị di chuyển, xóa hoặc không tồn tại.</p>
+                
+                <div class="error-actions">
+                    <button class="btn-primary" onclick="goBack()">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </button>
+                    <a href="dashboard.html" class="btn-secondary">
+                        <i class="fas fa-home"></i> Về trang chủ
+                    </a>
+                </div>
+                
+                <div class="suggested-links">
+                    <h3>Có thể bạn muốn tìm:</h3>
+                    <div class="link-grid">
+                        <a href="khoa-hoc.html"><i class="fas fa-book"></i> Khóa học</a>
+                        <a href="luyen-tap.html"><i class="fas fa-pencil-alt"></i> Luyện tập</a>
+                        <a href="thi-thu.html"><i class="fas fa-clock"></i> Thi thử</a>
+                        <a href="bang-xep-hang.html"><i class="fas fa-trophy"></i> Bảng xếp hạng</a>
+                    </div>
+                </div>
+                
+                <div class="auto-redirect">
+                    <p>Tự động chuyển về trang chủ sau <span id="countdown">10</span> giây...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu - Hệ thống học tập trực tuyến</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Cập nhật user info nếu đã đăng nhập
+        function updateUserInfo() {
+            const user = sessionStorage.getItem('vioedu_user') || localStorage.getItem('vioedu_user');
+            const userInfoArea = document.getElementById('userInfoArea');
+            
+            if (user && userInfoArea) {
+                try {
+                    const userData = JSON.parse(user);
+                    userInfoArea.innerHTML = `
+                        <span class="user-name">${userData.name}</span>
+                        <div class="avatar">${userData.name.charAt(0)}</div>
+                    `;
+                } catch (e) {
+                    userInfoArea.innerHTML = `
+                        <a href="register.html" class="btn-register">Đăng ký</a>
+                        <a href="index.html" class="btn-login-small">Đăng nhập</a>
+                    `;
+                }
+            } else if (userInfoArea) {
+                userInfoArea.innerHTML = `
+                    <a href="register.html" class="btn-register">Đăng ký</a>
+                    <a href="index.html" class="btn-login-small">Đăng nhập</a>
+                `;
+            }
+        }
+        
+        // Quay lại trang trước
+        function goBack() {
+            if (document.referrer && document.referrer.includes(window.location.host)) {
+                window.history.back();
+            } else {
+                window.location.href = 'dashboard.html';
+            }
+        }
+        
+        // Đếm ngược tự động chuyển trang
+        let countdown = 10;
+        const countdownEl = document.getElementById('countdown');
+        
+        const timer = setInterval(() => {
+            countdown--;
+            if (countdownEl) countdownEl.textContent = countdown;
+            
+            if (countdown <= 0) {
+                clearInterval(timer);
+                window.location.href = 'dashboard.html';
+            }
+        }, 1000);
+        
+        // Dừng đếm ngược nếu người dùng tương tác
+        document.querySelector('.error-actions')?.addEventListener('click', () => {
+            clearInterval(timer);
+            if (countdownEl) countdownEl.parentElement.style.display = 'none';
+        });
+        
+        // Khởi tạo
+        updateUserInfo();
+        
+        // Log lỗi 404
+        if (window.analytics) {
+            analytics.trackEvent('error', '404', window.location.pathname);
+        }
+        
+        console.log('404 - Page not found:', window.location.pathname);
+    </script>
+</body>
+</html>

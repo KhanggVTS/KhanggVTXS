@@ -1,1190 +1,3004 @@
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 1: KHỞI TẠO & CẤU HÌNH
+// SCRIPT.JS SIÊU THÔNG MINH - VERSION 5.0
+// ============================================
+// Hệ thống điều khiển thông minh với AI và ML
+// Team C00LKIDD - VioEdu Platform
+// Features: AI Assistant, Smart Analytics, Offline Mode, PWA Ready
 // ============================================
 
-// CẤU HÌNH TOÀN CỤC
+'use strict';
+
+console.log('%c🚀 SCRIPT.JS SIÊU THÔNG MINH V5.0 LOADING...', 'color: #00b14f; font-size: 16px; font-weight: bold;');
+
+// ============================================
+// PHẦN 1: CẤU HÌNH TOÀN CỤC & CONSTANTS
+// ============================================
+
 const CONFIG = {
     APP_NAME: 'VioEdu',
-    VERSION: '3.0',
+    VERSION: '5.0.0',
+    BUILD: '2025.03.15',
     DEBUG: true,
+    
+    // Storage Keys
     STORAGE_KEYS: {
         USER: 'vioedu_user',
+        CURRENT_USER: 'vioedu_current_user',
         PACKAGE: 'selected_package',
         LOGIN_HISTORY: 'login_history',
         REGISTRATIONS: 'registrations',
         TRANSACTIONS: 'transactions',
         STUDY_HISTORY: 'study_history',
+        EXAM_HISTORY: 'exam_history',
         SETTINGS: 'user_settings',
         BOOKMARKS: 'bookmarks',
         NOTES: 'notes',
         ACHIEVEMENTS: 'achievements',
         DAILY_GOALS: 'daily_goals',
-        EXAM_HISTORY: 'exam_history'
+        AI_CACHE: 'ai_cache',
+        OFFLINE_DATA: 'offline_data',
+        SYNC_QUEUE: 'sync_queue'
     },
-    NOTIFICATION_DURATION: 3000,
-    MAX_HISTORY_ITEMS: 100,
-    DEFAULT_USER: {
-        username: 'hocsinh1',
-        password: '123456'
+    
+    // API Endpoints (Simulated)
+    API: {
+        BASE_URL: 'https://api.vioedu.com/v1',
+        TIMEOUT: 30000,
+        RETRY_ATTEMPTS: 3
     },
+    
+    // UI Configuration
+    NOTIFICATION_DURATION: 5000,
+    ANIMATION_DURATION: 300,
+    AUTO_SAVE_INTERVAL: 30000,
+    SESSION_TIMEOUT: 3600000, // 1 hour
+    
+    // AI Configuration
+    AI: {
+        ENABLED: true,
+        MODEL_VERSION: 'vioedu-ai-v2',
+        CONFIDENCE_THRESHOLD: 0.7,
+        MAX_RECOMMENDATIONS: 5
+    },
+    
+    // Exam Configuration
     EXAM_CONFIG: {
-        TIME_PER_QUESTION: 60, // 60 giây/câu
+        TIME_PER_QUESTION: 60,
         DEFAULT_QUESTIONS: 30,
-        DEFAULT_TIME: 30 * 60 // 30 phút
+        DEFAULT_TIME: 45,
+        WARNING_TIME: 300 // 5 minutes
+    },
+    
+    // Game Configuration
+    GAME_CONFIG: {
+        ENABLED: true,
+        REWARD_POINTS: 10,
+        DAILY_BONUS: 50
+    },
+    
+    // Default Settings
+    DEFAULT_SETTINGS: {
+        theme: 'light',
+        notifications: true,
+        sound: true,
+        autoSave: true,
+        fontSize: 'medium',
+        language: 'vi',
+        offlineMode: false,
+        aiAssistant: true,
+        autoNext: true,
+        examReminder: true,
+        dailyGoal: 30,
+        privacyMode: false
     }
 };
 
-// BIẾN TOÀN CỤC
-let currentUser = null;
-let currentExercise = null;
-let currentExam = null;
-let currentAnswers = [];
-let currentQuestions = [];
-let currentQuestionIndex = 0;
-let examTimer = null;
-let examTimeLeft = 0;
-let examStartTime = null;
-let appSettings = {};
-let dailyGoals = {};
-let achievements = [];
+// ============================================
+// PHẦN 2: GLOBAL STATE MANAGEMENT
+// ============================================
 
-// KHỞI TẠO ỨNG DỤNG
-document.addEventListener('DOMContentLoaded', function() {
-    console.log(`🚀 ${CONFIG.APP_NAME} v${CONFIG.VERSION} Script Loaded!`);
-    
-    // Khởi tạo theo thứ tự
-    initializeSettings();
-    checkLoginStatus();
-    loadDailyGoals();
-    loadPageContent();
-    initializeEventListeners();
-    updateUI();
-    initializeAnimations();
-    checkAchievements();
-    
-    // Log thông tin debug
-    if (CONFIG.DEBUG) {
-        console.log('✅ App initialized with config:', CONFIG);
+class AppState {
+    constructor() {
+        this.currentUser = null;
+        this.currentExercise = null;
+        this.currentExam = null;
+        this.currentQuestions = [];
+        this.currentAnswers = [];
+        this.currentQuestionIndex = 0;
+        this.examTimer = null;
+        this.examTimeLeft = 0;
+        this.examStartTime = null;
+        this.settings = { ...CONFIG.DEFAULT_SETTINGS };
+        this.dailyGoals = {};
+        this.achievements = [];
+        this.bookmarks = [];
+        this.notes = [];
+        this.offlineQueue = [];
+        this.isOnline = navigator.onLine;
+        this.sessionStartTime = Date.now();
+        this.lastActivity = Date.now();
+        this.aiCache = new Map();
+        
+        // Bind methods
+        this.initialize = this.initialize.bind(this);
+        this.saveState = this.saveState.bind(this);
+        this.loadState = this.loadState.bind(this);
     }
-});
-
-// KHỞI TẠO CÀI ĐẶT
-function initializeSettings() {
-    try {
-        const savedSettings = localStorage.getItem(CONFIG.STORAGE_KEYS.SETTINGS);
-        appSettings = savedSettings ? JSON.parse(savedSettings) : {
-            theme: 'light',
-            notifications: true,
-            autoSave: true,
-            language: 'vi',
-            fontSize: 'medium',
-            sound: true,
-            autoNext: true,
-            examReminder: true,
-            dailyGoal: 30
-        };
-    } catch (e) {
-        console.error('❌ Error loading settings:', e);
-        appSettings = { 
-            theme: 'light', 
-            notifications: true, 
-            autoSave: true, 
-            language: 'vi',
-            fontSize: 'medium',
-            sound: true,
-            autoNext: true,
-            examReminder: true,
-            dailyGoal: 30
-        };
-    }
-}
-
-// KIỂM TRA ĐĂNG NHẬP
-function checkLoginStatus() {
-    const user = sessionStorage.getItem(CONFIG.STORAGE_KEYS.USER) || 
-                 localStorage.getItem(CONFIG.STORAGE_KEYS.USER);
-    if (user) {
-        try {
-            currentUser = JSON.parse(user);
-            console.log('✅ User logged in:', currentUser.name);
-            trackUserActivity('login', { username: currentUser.username });
-            updateLastActive();
-            loadUserAchievements();
-        } catch (e) {
-            console.error('❌ Error parsing user data');
+    
+    initialize() {
+        this.loadSettings();
+        this.loadUserState();
+        this.loadDailyGoals();
+        this.loadAchievements();
+        this.loadBookmarks();
+        this.loadNotes();
+        this.setupOfflineSupport();
+        this.setupActivityTracking();
+        this.setupAutoSave();
+        
+        if (CONFIG.DEBUG) {
+            console.log('✅ AppState initialized', {
+                user: this.currentUser?.name,
+                settings: this.settings,
+                isOnline: this.isOnline
+            });
         }
     }
-}
-
-// CẬP NHẬT LẦN HOẠT ĐỘNG CUỐI
-function updateLastActive() {
-    if (currentUser) {
-        currentUser.lastActive = new Date().toISOString();
-        saveUserData();
-    }
-}
-
-// LƯU DỮ LIỆU NGƯỜI DÙNG
-function saveUserData() {
-    if (currentUser) {
-        const storage = currentUser.rememberMe ? localStorage : sessionStorage;
-        storage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(currentUser));
-    }
-}
-
-// THEO DÕI HOẠT ĐỘNG NGƯỜI DÙNG
-function trackUserActivity(action, data = {}) {
-    if (!currentUser && action !== 'login') return;
     
-    try {
-        let activities = JSON.parse(localStorage.getItem('user_activities') || '[]');
-        activities.push({
-            userId: currentUser?.id || 'guest',
-            username: currentUser?.username || 'guest',
-            action: action,
-            data: data,
-            timestamp: new Date().toISOString(),
-            url: window.location.href,
-            userAgent: navigator.userAgent
-        });
-        
-        // Giữ tối đa 200 hoạt động
-        if (activities.length > 200) activities = activities.slice(-200);
-        localStorage.setItem('user_activities', JSON.stringify(activities));
-    } catch (e) {
-        console.error('Error tracking activity:', e);
+    loadSettings() {
+        try {
+            const saved = localStorage.getItem(CONFIG.STORAGE_KEYS.SETTINGS);
+            if (saved) {
+                this.settings = { ...CONFIG.DEFAULT_SETTINGS, ...JSON.parse(saved) };
+            }
+            this.applySettings();
+        } catch (e) {
+            console.error('Error loading settings:', e);
+        }
     }
-}
-
-// TẢI MỤC TIÊU HÀNG NGÀY
-function loadDailyGoals() {
-    if (!currentUser) return;
-    try {
-        const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.DAILY_GOALS}_${currentUser.id}`);
-        dailyGoals = saved ? JSON.parse(saved) : {
+    
+    saveSettings() {
+        try {
+            localStorage.setItem(CONFIG.STORAGE_KEYS.SETTINGS, JSON.stringify(this.settings));
+            this.applySettings();
+        } catch (e) {
+            console.error('Error saving settings:', e);
+        }
+    }
+    
+    applySettings() {
+        // Apply theme
+        document.documentElement.setAttribute('data-theme', this.settings.theme);
+        
+        // Apply font size
+        document.documentElement.style.fontSize = {
+            'small': '14px',
+            'medium': '16px',
+            'large': '18px'
+        }[this.settings.fontSize] || '16px';
+        
+        // Apply privacy mode
+        if (this.settings.privacyMode) {
+            document.body.classList.add('privacy-mode');
+        } else {
+            document.body.classList.remove('privacy-mode');
+        }
+    }
+    
+    loadUserState() {
+        const user = sessionStorage.getItem(CONFIG.STORAGE_KEYS.USER) || 
+                    localStorage.getItem(CONFIG.STORAGE_KEYS.USER);
+        if (user) {
+            try {
+                this.currentUser = JSON.parse(user);
+                this.updateLastActive();
+            } catch (e) {
+                console.error('Error parsing user data');
+            }
+        }
+    }
+    
+    saveUserState() {
+        if (this.currentUser) {
+            const storage = this.currentUser.rememberMe ? localStorage : sessionStorage;
+            storage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(this.currentUser));
+        }
+    }
+    
+    updateLastActive() {
+        if (this.currentUser) {
+            this.currentUser.lastActive = new Date().toISOString();
+            this.lastActivity = Date.now();
+            this.saveUserState();
+        }
+    }
+    
+    loadDailyGoals() {
+        if (!this.currentUser) return;
+        try {
+            const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.DAILY_GOALS}_${this.currentUser.id}`);
+            if (saved) {
+                this.dailyGoals = JSON.parse(saved);
+            } else {
+                this.resetDailyGoals();
+            }
+            
+            // Check if new day
+            if (this.dailyGoals.date !== new Date().toDateString()) {
+                const oldStreak = this.dailyGoals.streak;
+                const wasCompleted = this.dailyGoals.exercisesDone >= this.dailyGoals.exercisesTarget;
+                this.resetDailyGoals();
+                this.dailyGoals.streak = wasCompleted ? oldStreak + 1 : 0;
+                this.saveDailyGoals();
+            }
+        } catch (e) {
+            console.error('Error loading daily goals:', e);
+            this.resetDailyGoals();
+        }
+    }
+    
+    resetDailyGoals() {
+        this.dailyGoals = {
             date: new Date().toDateString(),
             exercisesDone: 0,
-            exercisesTarget: 5,
+            exercisesTarget: this.settings.dailyGoal || 30,
             timeSpent: 0,
-            timeTarget: 30,
+            timeTarget: 60,
             examsDone: 0,
-            examsTarget: 1,
+            examsTarget: 2,
+            pointsEarned: 0,
             streak: 0
         };
-        
-        // Reset nếu ngày mới
-        if (dailyGoals.date !== new Date().toDateString()) {
-            const oldStreak = dailyGoals.streak;
-            const wasCompleted = dailyGoals.exercisesDone >= dailyGoals.exercisesTarget;
-            
-            dailyGoals = {
-                date: new Date().toDateString(),
-                exercisesDone: 0,
-                exercisesTarget: 5,
-                timeSpent: 0,
-                timeTarget: 30,
-                examsDone: 0,
-                examsTarget: 1,
-                streak: wasCompleted ? oldStreak + 1 : 0
-            };
-            saveDailyGoals();
-        }
-    } catch (e) {
-        console.error('Error loading daily goals:', e);
-    }
-}
-
-// LƯU MỤC TIÊU HÀNG NGÀY
-function saveDailyGoals() {
-    if (!currentUser) return;
-    localStorage.setItem(`${CONFIG.STORAGE_KEYS.DAILY_GOALS}_${currentUser.id}`, JSON.stringify(dailyGoals));
-}
-
-// TẢI THÀNH TỰU NGƯỜI DÙNG
-function loadUserAchievements() {
-    if (!currentUser) return;
-    try {
-        const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.ACHIEVEMENTS}_${currentUser.id}`);
-        achievements = saved ? JSON.parse(saved) : [];
-    } catch (e) {
-        console.error('Error loading achievements:', e);
-        achievements = [];
-    }
-}
-
-// KIỂM TRA THÀNH TỰU
-function checkAchievements() {
-    if (!currentUser || !window.achievementsList) return;
-    
-    const allAchievements = window.achievementsList || [];
-    const unlocked = new Set(achievements.map(a => a.id));
-    
-    // Kiểm tra từng thành tựu
-    allAchievements.forEach(achievement => {
-        if (unlocked.has(achievement.id)) return;
-        
-        let earned = false;
-        
-        switch(achievement.condition.type) {
-            case 'exercises':
-                const history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY) || '[]');
-                earned = history.length >= achievement.condition.value;
-                break;
-            case 'score':
-                const bestScore = Math.max(...(window.studyHistory || []).map(h => h.score || 0));
-                earned = bestScore >= achievement.condition.value;
-                break;
-            case 'streak':
-                earned = (dailyGoals.streak || 0) >= achievement.condition.value;
-                break;
-            case 'exams':
-                const examHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
-                earned = examHistory.length >= achievement.condition.value;
-                break;
-        }
-        
-        if (earned) {
-            unlockAchievement(achievement);
-        }
-    });
-}
-
-// MỞ KHÓA THÀNH TỰU
-function unlockAchievement(achievement) {
-    achievements.push({
-        id: achievement.id,
-        name: achievement.name,
-        unlockedAt: new Date().toISOString()
-    });
-    
-    localStorage.setItem(`${CONFIG.STORAGE_KEYS.ACHIEVEMENTS}_${currentUser.id}`, JSON.stringify(achievements));
-    
-    showNotification(`🏆 Thành tựu: ${achievement.name}`, 'success');
-    trackUserActivity('achievement_unlocked', { achievementId: achievement.id });
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 2: XỬ LÝ ĐĂNG NHẬP
-// ============================================
-
-// XỬ LÝ ĐĂNG NHẬP
-function handleLogin() {
-    const username = document.getElementById('username')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
-    const rememberMe = document.querySelector('.checkbox input')?.checked || false;
-    
-    if (!username || !password) {
-        showNotification('Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!', 'error');
-        return;
     }
     
-    // Kiểm tra trong fakeUsers
-    const user = window.fakeUsers?.find(u => u.username === username && u.password === password);
+    saveDailyGoals() {
+        if (!this.currentUser) return;
+        try {
+            localStorage.setItem(
+                `${CONFIG.STORAGE_KEYS.DAILY_GOALS}_${this.currentUser.id}`,
+                JSON.stringify(this.dailyGoals)
+            );
+        } catch (e) {
+            console.error('Error saving daily goals:', e);
+        }
+    }
     
-    if (user) {
-        // Đăng nhập thành công
-        currentUser = {
-            ...user,
-            rememberMe: rememberMe,
-            lastLogin: new Date().toISOString()
+    loadAchievements() {
+        if (!this.currentUser) return;
+        try {
+            const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.ACHIEVEMENTS}_${this.currentUser.id}`);
+            this.achievements = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            console.error('Error loading achievements:', e);
+            this.achievements = [];
+        }
+    }
+    
+    saveAchievements() {
+        if (!this.currentUser) return;
+        try {
+            localStorage.setItem(
+                `${CONFIG.STORAGE_KEYS.ACHIEVEMENTS}_${this.currentUser.id}`,
+                JSON.stringify(this.achievements)
+            );
+        } catch (e) {
+            console.error('Error saving achievements:', e);
+        }
+    }
+    
+    loadBookmarks() {
+        if (!this.currentUser) return;
+        try {
+            const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.BOOKMARKS}_${this.currentUser.id}`);
+            this.bookmarks = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            this.bookmarks = [];
+        }
+    }
+    
+    loadNotes() {
+        if (!this.currentUser) return;
+        try {
+            const saved = localStorage.getItem(`${CONFIG.STORAGE_KEYS.NOTES}_${this.currentUser.id}`);
+            this.notes = saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            this.notes = [];
+        }
+    }
+    
+    setupOfflineSupport() {
+        this.isOnline = navigator.onLine;
+        window.addEventListener('online', () => {
+            this.isOnline = true;
+            this.syncOfflineData();
+            showNotification('Đã kết nối lại internet!', 'success');
+        });
+        window.addEventListener('offline', () => {
+            this.isOnline = false;
+            showNotification('Đang ở chế độ ngoại tuyến', 'warning');
+        });
+    }
+    
+    syncOfflineData() {
+        try {
+            const queue = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.SYNC_QUEUE) || '[]');
+            if (queue.length > 0) {
+                showNotification(`Đang đồng bộ ${queue.length} mục...`, 'info');
+                // Simulate sync
+                setTimeout(() => {
+                    localStorage.setItem(CONFIG.STORAGE_KEYS.SYNC_QUEUE, '[]');
+                    showNotification('Đồng bộ hoàn tất!', 'success');
+                }, 2000);
+            }
+        } catch (e) {
+            console.error('Error syncing offline data:', e);
+        }
+    }
+    
+    setupActivityTracking() {
+        // Track user activity
+        ['click', 'keydown', 'scroll', 'mousemove'].forEach(event => {
+            document.addEventListener(event, () => {
+                this.updateLastActive();
+            });
+        });
+        
+        // Check session timeout
+        setInterval(() => {
+            if (this.currentUser && Date.now() - this.lastActivity > CONFIG.SESSION_TIMEOUT) {
+                this.logout(true);
+            }
+        }, 60000);
+    }
+    
+    setupAutoSave() {
+        setInterval(() => {
+            if (this.currentExercise || this.currentExam) {
+                this.saveProgress();
+            }
+        }, CONFIG.AUTO_SAVE_INTERVAL);
+    }
+    
+    saveProgress() {
+        if (!this.currentUser) return;
+        
+        const progress = {
+            type: this.currentExam ? 'exam' : 'exercise',
+            id: this.currentExam?.id || this.currentExercise,
+            answers: this.currentAnswers,
+            questionIndex: this.currentQuestionIndex,
+            timestamp: new Date().toISOString()
         };
         
-        // Lưu theo lựa chọn remember me
-        if (rememberMe) {
-            localStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(currentUser));
-        } else {
-            sessionStorage.setItem(CONFIG.STORAGE_KEYS.USER, JSON.stringify(currentUser));
+        localStorage.setItem(`progress_${this.currentUser.id}`, JSON.stringify(progress));
+    }
+    
+    loadProgress() {
+        if (!this.currentUser) return null;
+        
+        try {
+            const saved = localStorage.getItem(`progress_${this.currentUser.id}`);
+            return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+            return null;
         }
+    }
+    
+    clearProgress() {
+        if (this.currentUser) {
+            localStorage.removeItem(`progress_${this.currentUser.id}`);
+        }
+    }
+    
+    logout(timeout = false) {
+        const message = timeout ? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' : 'Đã đăng xuất!';
         
-        // Ghi log
-        saveLoginHistory(username, 'success');
-        trackUserActivity('login_success', { username, rememberMe });
+        this.currentUser = null;
+        sessionStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
         
-        showNotification(`Đăng nhập thành công! Chào mừng ${user.name}`, 'success');
+        showNotification(message, timeout ? 'warning' : 'info');
         
-        // Chuyển hướng sau 1s
         setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1000);
-    } else {
-        // Đăng nhập thất bại
-        showNotification('Sai tên đăng nhập hoặc mật khẩu! (Gợi ý: hocsinh1 / 123456)', 'error');
-        saveLoginHistory(username, 'failed');
-        trackUserActivity('login_failed', { username });
-        
-        // Gợi ý tài khoản demo
-        suggestDemoAccount();
+            window.location.href = 'index.html';
+        }, 500);
+    }
+    
+    saveState() {
+        return {
+            currentUser: this.currentUser,
+            settings: this.settings,
+            dailyGoals: this.dailyGoals,
+            achievements: this.achievements,
+            timestamp: new Date().toISOString()
+        };
+    }
+    
+    loadState(state) {
+        if (!state) return;
+        this.currentUser = state.currentUser;
+        this.settings = state.settings || CONFIG.DEFAULT_SETTINGS;
+        this.dailyGoals = state.dailyGoals;
+        this.achievements = state.achievements || [];
+        this.applySettings();
     }
 }
 
-// GỢI Ý TÀI KHOẢN DEMO
-function suggestDemoAccount() {
-    setTimeout(() => {
-        const demoAlert = document.createElement('div');
-        demoAlert.style.cssText = `
+// Create global app state instance
+const appState = new AppState();
+
+// ============================================
+// PHẦN 3: AI ASSISTANT & RECOMMENDATION ENGINE
+// ============================================
+
+class AIAssistant {
+    constructor() {
+        this.modelVersion = CONFIG.AI.MODEL_VERSION;
+        this.enabled = CONFIG.AI.ENABLED;
+        this.confidenceThreshold = CONFIG.AI.CONFIDENCE_THRESHOLD;
+        this.learningRate = 0.1;
+        this.userProfile = null;
+        this.predictionCache = new Map();
+    }
+    
+    initialize(userId) {
+        if (!this.enabled) return;
+        this.userProfile = this.loadUserProfile(userId);
+        console.log('🤖 AI Assistant initialized for user:', userId);
+    }
+    
+    loadUserProfile(userId) {
+        const user = window.getUserById?.(userId);
+        if (!user) return null;
+        
+        const history = window.studyHistory || [];
+        const userHistory = history.filter(h => h.status === 'completed');
+        
+        // Calculate learning patterns
+        const patterns = this.analyzeLearningPatterns(userHistory);
+        
+        return {
+            userId,
+            strengths: user.learningProfile?.strengths || [],
+            weaknesses: user.learningProfile?.weaknesses || [],
+            preferredTime: user.learningProfile?.preferredTime || 'flexible',
+            averageSession: user.learningProfile?.averageSession || 30,
+            patterns,
+            lastUpdated: new Date().toISOString()
+        };
+    }
+    
+    analyzeLearningPatterns(history) {
+        if (!history || history.length === 0) return {};
+        
+        const patterns = {
+            bestTime: null,
+            bestSubject: null,
+            worstSubject: null,
+            avgAccuracy: 0,
+            speedTrend: 'stable',
+            consistencyScore: 0
+        };
+        
+        // Analyze by subject
+        const subjectStats = {};
+        history.forEach(h => {
+            if (!subjectStats[h.subject]) {
+                subjectStats[h.subject] = { scores: [], times: [], count: 0 };
+            }
+            subjectStats[h.subject].scores.push(h.score);
+            subjectStats[h.subject].times.push(h.timeSpent);
+            subjectStats[h.subject].count++;
+        });
+        
+        // Find best and worst subjects
+        let bestAvg = 0, worstAvg = 100;
+        Object.entries(subjectStats).forEach(([subject, stats]) => {
+            const avg = stats.scores.reduce((a,b) => a+b, 0) / stats.scores.length;
+            if (avg > bestAvg) {
+                bestAvg = avg;
+                patterns.bestSubject = subject;
+            }
+            if (avg < worstAvg) {
+                worstAvg = avg;
+                patterns.worstSubject = subject;
+            }
+        });
+        
+        // Calculate consistency
+        const allScores = history.map(h => h.score);
+        const avgScore = allScores.reduce((a,b) => a+b, 0) / allScores.length;
+        const variance = allScores.reduce((sum, s) => sum + Math.pow(s - avgScore, 2), 0) / allScores.length;
+        patterns.consistencyScore = Math.max(0, 100 - Math.sqrt(variance) * 2);
+        patterns.avgAccuracy = avgScore;
+        
+        return patterns;
+    }
+    
+    getRecommendations(userId, context = {}) {
+        if (!this.enabled) return this.getFallbackRecommendations();
+        
+        // Check cache
+        const cacheKey = `${userId}_${JSON.stringify(context)}`;
+        if (this.predictionCache.has(cacheKey)) {
+            return this.predictionCache.get(cacheKey);
+        }
+        
+        const recommendations = [];
+        const user = window.getUserById?.(userId);
+        const history = window.studyHistory || [];
+        const analytics = window.getLearningAnalytics?.(userId);
+        
+        if (!user || !analytics) {
+            return this.getFallbackRecommendations();
+        }
+        
+        // 1. Recommendations based on weaknesses
+        if (analytics.weaknesses && analytics.weaknesses.length > 0) {
+            analytics.weaknesses.forEach(weakness => {
+                const recs = this.getRecommendationsForWeakness(weakness, user.class);
+                recommendations.push(...recs);
+            });
+        }
+        
+        // 2. Recommendations based on recent activity
+        const recentHistory = history.filter(h => {
+            const date = new Date(h.date);
+            const now = new Date();
+            return (now - date) / (1000 * 60 * 60 * 24) < 7;
+        });
+        
+        if (recentHistory.length > 0) {
+            const lastSubject = recentHistory[0].subject;
+            const nextLevel = this.getNextLevelExercise(lastSubject, recentHistory[0].score);
+            if (nextLevel) {
+                recommendations.push({
+                    type: 'exercise',
+                    id: nextLevel.id,
+                    title: nextLevel.title,
+                    reason: `Tiếp tục với ${nextLevel.title} dựa trên kết quả gần đây`,
+                    priority: 'high',
+                    confidence: 0.85
+                });
+            }
+        }
+        
+        // 3. Recommendations for exam preparation
+        if (context.examPrep || analytics.predictedExamScore < 70) {
+            const examRecs = this.getExamRecommendations(user.class, analytics.weaknesses);
+            recommendations.push(...examRecs);
+        }
+        
+        // 4. Daily practice recommendations
+        const dailyRec = this.getDailyPracticeRecommendation(user.class, analytics.strengths?.[0]);
+        if (dailyRec) {
+            recommendations.push(dailyRec);
+        }
+        
+        // Sort by priority and confidence
+        recommendations.sort((a, b) => {
+            const priorityOrder = { high: 3, medium: 2, low: 1 };
+            const aScore = (priorityOrder[a.priority] || 0) + (a.confidence || 0);
+            const bScore = (priorityOrder[b.priority] || 0) + (b.confidence || 0);
+            return bScore - aScore;
+        });
+        
+        // Limit recommendations
+        const limited = recommendations.slice(0, CONFIG.AI.MAX_RECOMMENDATIONS);
+        
+        // Cache result
+        this.predictionCache.set(cacheKey, limited);
+        setTimeout(() => this.predictionCache.delete(cacheKey), 300000); // 5 min TTL
+        
+        return limited;
+    }
+    
+    getRecommendationsForWeakness(weakness, classLevel) {
+        const recommendations = [];
+        const exercises = Object.values(window.exercises || {});
+        
+        const relevant = exercises.filter(ex => 
+            ex.subject === weakness && 
+            ex.class === classLevel &&
+            ex.difficulty === 'Dễ'
+        );
+        
+        relevant.slice(0, 2).forEach(ex => {
+            recommendations.push({
+                type: 'exercise',
+                id: ex.id,
+                title: ex.title,
+                reason: `Cải thiện kỹ năng ${weakness}`,
+                priority: 'high',
+                confidence: 0.9
+            });
+        });
+        
+        return recommendations;
+    }
+    
+    getNextLevelExercise(subject, lastScore) {
+        const exercises = Object.values(window.exercises || {});
+        const relevant = exercises.filter(ex => ex.subject === subject);
+        
+        if (lastScore >= 80) {
+            return relevant.find(ex => ex.difficulty === 'Khó');
+        } else if (lastScore >= 60) {
+            return relevant.find(ex => ex.difficulty === 'Trung bình');
+        } else {
+            return relevant.find(ex => ex.difficulty === 'Dễ');
+        }
+    }
+    
+    getExamRecommendations(classLevel, weaknesses) {
+        const exams = window.exams || [];
+        return exams
+            .filter(ex => ex.class === classLevel)
+            .slice(0, 2)
+            .map(ex => ({
+                type: 'exam',
+                id: ex.id,
+                title: ex.name,
+                reason: 'Luyện tập cho kỳ thi sắp tới',
+                priority: 'high',
+                confidence: 0.88
+            }));
+    }
+    
+    getDailyPracticeRecommendation(classLevel, strength) {
+        const exercises = Object.values(window.exercises || {});
+        const quickEx = exercises.find(ex => 
+            ex.class === classLevel && 
+            ex.time <= 15 &&
+            ex.difficulty === 'Dễ'
+        );
+        
+        if (!quickEx) return null;
+        
+        return {
+            type: 'exercise',
+            id: quickEx.id,
+            title: quickEx.title,
+            reason: 'Bài tập nhanh hàng ngày',
+            priority: 'medium',
+            confidence: 0.75
+        };
+    }
+    
+    predictScore(userId, exerciseId) {
+        const user = window.getUserById?.(userId);
+        const exercise = window.getExerciseById?.(exerciseId);
+        
+        if (!user || !exercise) return 70;
+        
+        const history = window.studyHistory || [];
+        const userHistory = history.filter(h => 
+            h.status === 'completed' && 
+            h.subject === exercise.subject
+        );
+        
+        if (userHistory.length === 0) return 70;
+        
+        // Weighted average with recency bias
+        let totalWeight = 0;
+        let weightedScore = 0;
+        
+        userHistory.forEach((h, index) => {
+            const weight = Math.pow(0.9, userHistory.length - 1 - index);
+            totalWeight += weight;
+            weightedScore += h.score * weight;
+        });
+        
+        const basePrediction = weightedScore / totalWeight;
+        
+        // Adjust based on difficulty
+        const difficultyMultiplier = {
+            'Dễ': 1.05,
+            'Trung bình': 1.0,
+            'Khó': 0.9
+        };
+        
+        return Math.round(basePrediction * (difficultyMultiplier[exercise.difficulty] || 1.0));
+    }
+    
+    getFallbackRecommendations() {
+        return [
+            {
+                type: 'exercise',
+                id: 'toan-5-1',
+                title: 'Phân số - Cơ bản',
+                reason: 'Bài tập được đề xuất',
+                priority: 'medium'
+            },
+            {
+                type: 'exam',
+                id: 1,
+                title: 'Đề thi thử Toán lớp 5',
+                reason: 'Đề thi phổ biến',
+                priority: 'medium'
+            }
+        ];
+    }
+    
+    analyzeAnswer(question, userAnswer) {
+        const isCorrect = userAnswer === question.answer;
+        const confidence = isCorrect ? 1.0 : 0.0;
+        
+        let feedback = '';
+        if (!isCorrect) {
+            feedback = question.explanation || 'Hãy xem lại kiến thức này nhé!';
+        }
+        
+        return {
+            isCorrect,
+            confidence,
+            feedback,
+            suggestedReview: !isCorrect ? this.suggestReview(question) : null
+        };
+    }
+    
+    suggestReview(question) {
+        const topic = question.skill || 'cơ bản';
+        return {
+            topic,
+            message: `Bạn nên ôn lại phần ${topic}`,
+            resources: this.findResources(topic)
+        };
+    }
+    
+    findResources(topic) {
+        // Map topic to relevant exercises
+        const resourceMap = {
+            'addition': ['toan-5-1'],
+            'subtraction': ['toan-5-1'],
+            'multiplication': ['toan-5-2'],
+            'division': ['toan-5-2'],
+            'vocabulary': ['anh-5-1'],
+            'grammar': ['anh-5-4'],
+            'spelling': ['van-5-2']
+        };
+        
+        return resourceMap[topic] || [];
+    }
+    
+    generateStudyPlan(userId, targetScore = 90, days = 30) {
+        const user = window.getUserById?.(userId);
+        const analytics = window.getLearningAnalytics?.(userId);
+        
+        if (!user || !analytics) return null;
+        
+        const plan = {
+            userId,
+            targetScore,
+            days,
+            currentScore: analytics.averageScore,
+            weeklyPlan: [],
+            dailyTargets: []
+        };
+        
+        const scoreGap = targetScore - analytics.averageScore;
+        const dailyImprovement = scoreGap / days;
+        
+        // Create weekly plan
+        const subjects = ['toan', 'van', 'anh'];
+        subjects.forEach((subject, weekIndex) => {
+            const focus = analytics.weaknesses.includes(subject) ? 'intensive' : 'maintenance';
+            const exercisesPerDay = focus === 'intensive' ? 3 : 2;
+            
+            plan.weeklyPlan.push({
+                week: weekIndex + 1,
+                subject,
+                focus,
+                exercisesPerDay,
+                targetScore: Math.round(analytics.averageScore + dailyImprovement * 7 * (weekIndex + 1))
+            });
+        });
+        
+        return plan;
+    }
+}
+
+// Create global AI assistant instance
+const aiAssistant = new AIAssistant();
+
+// ============================================
+// PHẦN 4: ANALYTICS ENGINE
+// ============================================
+
+class AnalyticsEngine {
+    constructor() {
+        this.metrics = {
+            pageViews: {},
+            events: [],
+            performance: {},
+            errors: []
+        };
+        this.sessionId = this.generateSessionId();
+    }
+    
+    generateSessionId() {
+        return 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
+    
+    trackPageView(page) {
+        if (!this.metrics.pageViews[page]) {
+            this.metrics.pageViews[page] = 0;
+        }
+        this.metrics.pageViews[page]++;
+        
+        this.logEvent('page_view', { page });
+    }
+    
+    trackEvent(category, action, label = null, value = null) {
+        const event = {
+            category,
+            action,
+            label,
+            value,
+            timestamp: new Date().toISOString(),
+            sessionId: this.sessionId,
+            userId: appState.currentUser?.id || 'anonymous'
+        };
+        
+        this.metrics.events.push(event);
+        
+        // Keep only last 1000 events
+        if (this.metrics.events.length > 1000) {
+            this.metrics.events = this.metrics.events.slice(-1000);
+        }
+        
+        if (CONFIG.DEBUG) {
+            console.log('📊 Analytics:', event);
+        }
+    }
+    
+    trackExerciseStart(exerciseId, exerciseData) {
+        this.trackEvent('exercise', 'start', exerciseId);
+        
+        const startTime = Date.now();
+        sessionStorage.setItem(`exercise_${exerciseId}_start`, startTime);
+        
+        return {
+            exerciseId,
+            startTime,
+            data: exerciseData
+        };
+    }
+    
+    trackExerciseComplete(exerciseId, result) {
+        const startTime = sessionStorage.getItem(`exercise_${exerciseId}_start`);
+        const duration = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+        
+        this.trackEvent('exercise', 'complete', exerciseId, result.score);
+        
+        // Calculate performance metrics
+        const performance = {
+            exerciseId,
+            score: result.score,
+            correct: result.correct,
+            total: result.total,
+            duration,
+            accuracy: result.correct / result.total * 100,
+            speed: duration / result.total,
+            timestamp: new Date().toISOString()
+        };
+        
+        this.metrics.performance[exerciseId] = performance;
+        
+        // Update daily goals
+        this.updateDailyGoals(performance);
+        
+        // Check achievements
+        this.checkAchievements(performance);
+        
+        sessionStorage.removeItem(`exercise_${exerciseId}_start`);
+        
+        return performance;
+    }
+    
+    trackExamStart(examId, examData) {
+        this.trackEvent('exam', 'start', examId);
+        
+        const startTime = Date.now();
+        sessionStorage.setItem(`exam_${examId}_start`, startTime);
+        
+        return {
+            examId,
+            startTime,
+            data: examData
+        };
+    }
+    
+    trackExamComplete(examId, result) {
+        const startTime = sessionStorage.getItem(`exam_${examId}_start`);
+        const duration = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+        
+        this.trackEvent('exam', 'complete', examId, result.score);
+        
+        const performance = {
+            examId,
+            score: result.score,
+            correct: result.correct,
+            total: result.total,
+            duration,
+            accuracy: result.correct / result.total * 100,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Save to exam history
+        this.saveExamHistory(performance);
+        
+        sessionStorage.removeItem(`exam_${examId}_start`);
+        
+        return performance;
+    }
+    
+    trackError(error, context = {}) {
+        const errorRecord = {
+            message: error.message,
+            stack: error.stack,
+            context,
+            timestamp: new Date().toISOString(),
+            userId: appState.currentUser?.id,
+            url: window.location.href
+        };
+        
+        this.metrics.errors.push(errorRecord);
+        
+        if (this.metrics.errors.length > 100) {
+            this.metrics.errors = this.metrics.errors.slice(-100);
+        }
+        
+        console.error('❌ Error tracked:', errorRecord);
+    }
+    
+    updateDailyGoals(performance) {
+        if (!appState.currentUser) return;
+        
+        appState.dailyGoals.exercisesDone++;
+        appState.dailyGoals.timeSpent += Math.round(performance.duration / 60);
+        appState.dailyGoals.pointsEarned += Math.round(performance.score / 10);
+        
+        appState.saveDailyGoals();
+        
+        // Check if daily goal completed
+        if (appState.dailyGoals.exercisesDone >= appState.dailyGoals.exercisesTarget) {
+            showNotification('🎉 Chúc mừng! Bạn đã đạt mục tiêu hôm nay!', 'success');
+            this.trackEvent('goal', 'daily_complete');
+        }
+    }
+    
+    checkAchievements(performance) {
+        if (!appState.currentUser) return;
+        
+        const allAchievements = window.achievementsList || [];
+        const unlockedIds = new Set(appState.achievements.map(a => a.id));
+        
+        allAchievements.forEach(achievement => {
+            if (unlockedIds.has(achievement.id)) return;
+            
+            let earned = false;
+            
+            switch (achievement.condition.type) {
+                case 'exercises':
+                    const totalExercises = (window.studyHistory || []).filter(h => 
+                        h.subject === achievement.condition.subject
+                    ).length;
+                    earned = totalExercises >= achievement.condition.value;
+                    break;
+                    
+                case 'perfect_score':
+                    earned = performance.score === 100;
+                    break;
+                    
+                case 'streak':
+                    earned = appState.dailyGoals.streak >= achievement.condition.value;
+                    break;
+                    
+                case 'exams':
+                    const examHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
+                    earned = examHistory.length >= achievement.condition.value;
+                    break;
+                    
+                case 'total_points':
+                    const totalPoints = appState.currentUser.points || 0;
+                    earned = totalPoints >= achievement.condition.value;
+                    break;
+            }
+            
+            if (earned) {
+                this.unlockAchievement(achievement);
+            }
+        });
+    }
+    
+    unlockAchievement(achievement) {
+        appState.achievements.push({
+            id: achievement.id,
+            name: achievement.name,
+            unlockedAt: new Date().toISOString()
+        });
+        
+        appState.saveAchievements();
+        
+        // Add points
+        if (appState.currentUser) {
+            appState.currentUser.points = (appState.currentUser.points || 0) + achievement.points;
+            appState.saveUserState();
+        }
+        
+        showNotification(`🏆 Thành tựu mới: ${achievement.name}! +${achievement.points} điểm`, 'success');
+        this.trackEvent('achievement', 'unlock', achievement.name);
+    }
+    
+    saveExamHistory(performance) {
+        try {
+            let history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
+            history.push(performance);
+            
+            if (history.length > 50) {
+                history = history.slice(-50);
+            }
+            
+            localStorage.setItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY, JSON.stringify(history));
+            
+            if (appState.currentUser) {
+                appState.dailyGoals.examsDone++;
+                appState.saveDailyGoals();
+            }
+        } catch (e) {
+            console.error('Error saving exam history:', e);
+        }
+    }
+    
+    getPerformanceReport(userId, period = 'week') {
+        const history = window.studyHistory || [];
+        const userHistory = history.filter(h => h.status === 'completed');
+        
+        if (userHistory.length === 0) return null;
+        
+        // Filter by period
+        const now = new Date();
+        const periodDays = { week: 7, month: 30, year: 365 };
+        const cutoff = new Date(now.setDate(now.getDate() - periodDays[period]));
+        
+        const periodHistory = userHistory.filter(h => new Date(h.date) >= cutoff);
+        
+        // Calculate metrics
+        const totalExercises = periodHistory.length;
+        const avgScore = periodHistory.reduce((s, h) => s + h.score, 0) / totalExercises;
+        const totalTime = periodHistory.reduce((s, h) => s + (h.timeSpent || 0), 0);
+        const accuracy = periodHistory.reduce((s, h) => s + (h.accuracy || 0), 0) / totalExercises;
+        
+        // Subject breakdown
+        const subjectBreakdown = {};
+        periodHistory.forEach(h => {
+            if (!subjectBreakdown[h.subject]) {
+                subjectBreakdown[h.subject] = { count: 0, totalScore: 0 };
+            }
+            subjectBreakdown[h.subject].count++;
+            subjectBreakdown[h.subject].totalScore += h.score;
+        });
+        
+        Object.keys(subjectBreakdown).forEach(subject => {
+            subjectBreakdown[subject].avgScore = 
+                Math.round(subjectBreakdown[subject].totalScore / subjectBreakdown[subject].count);
+        });
+        
+        // Trend analysis
+        const trend = this.calculateTrend(periodHistory);
+        
+        return {
+            period,
+            totalExercises,
+            avgScore: Math.round(avgScore),
+            totalTime,
+            accuracy: Math.round(accuracy),
+            subjectBreakdown,
+            trend,
+            strengths: this.identifyStrengths(subjectBreakdown),
+            weaknesses: this.identifyWeaknesses(subjectBreakdown),
+            recommendations: this.generateReportRecommendations(subjectBreakdown)
+        };
+    }
+    
+    calculateTrend(history) {
+        if (history.length < 5) return 'stable';
+        
+        const recent = history.slice(0, 5);
+        const older = history.slice(5, 10);
+        
+        if (older.length === 0) return 'stable';
+        
+        const recentAvg = recent.reduce((s, h) => s + h.score, 0) / recent.length;
+        const olderAvg = older.reduce((s, h) => s + h.score, 0) / older.length;
+        
+        if (recentAvg > olderAvg + 5) return 'improving';
+        if (recentAvg < olderAvg - 5) return 'declining';
+        return 'stable';
+    }
+    
+    identifyStrengths(breakdown) {
+        return Object.entries(breakdown)
+            .filter(([, data]) => data.avgScore >= 80)
+            .map(([subject]) => subject);
+    }
+    
+    identifyWeaknesses(breakdown) {
+        return Object.entries(breakdown)
+            .filter(([, data]) => data.avgScore < 60)
+            .map(([subject]) => subject);
+    }
+    
+    generateReportRecommendations(breakdown) {
+        const recommendations = [];
+        const weaknesses = this.identifyWeaknesses(breakdown);
+        
+        weaknesses.forEach(subject => {
+            recommendations.push({
+                type: 'focus',
+                subject,
+                message: `Tập trung cải thiện môn ${this.getSubjectName(subject)}`
+            });
+        });
+        
+        return recommendations;
+    }
+    
+    getSubjectName(subject) {
+        const names = { toan: 'Toán', van: 'Tiếng Việt', anh: 'Tiếng Anh' };
+        return names[subject] || subject;
+    }
+    
+    exportData() {
+        return {
+            metrics: this.metrics,
+            user: appState.currentUser,
+            settings: appState.settings,
+            dailyGoals: appState.dailyGoals,
+            achievements: appState.achievements,
+            exportDate: new Date().toISOString()
+        };
+    }
+    
+    clearData() {
+        this.metrics = {
+            pageViews: {},
+            events: [],
+            performance: {},
+            errors: []
+        };
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY);
+        localStorage.removeItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY);
+    }
+}
+
+// Create global analytics instance
+const analytics = new AnalyticsEngine();
+
+// ============================================
+// PHẦN 5: NOTIFICATION SYSTEM
+// ============================================
+
+class NotificationSystem {
+    constructor() {
+        this.container = null;
+        this.queue = [];
+        this.isShowing = false;
+        this.defaultDuration = CONFIG.NOTIFICATION_DURATION;
+        this.createContainer();
+    }
+    
+    createContainer() {
+        this.container = document.createElement('div');
+        this.container.id = 'notification-container';
+        this.container.style.cssText = `
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            background: #00b14f;
+            top: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 400px;
+            pointer-events: none;
+        `;
+        document.body.appendChild(this.container);
+    }
+    
+    show(message, type = 'info', options = {}) {
+        const notification = {
+            id: Date.now() + Math.random(),
+            message,
+            type,
+            duration: options.duration || this.defaultDuration,
+            icon: options.icon || this.getIcon(type),
+            action: options.action,
+            onClick: options.onClick,
+            persistent: options.persistent || false
+        };
+        
+        this.queue.push(notification);
+        this.processQueue();
+        
+        return notification.id;
+    }
+    
+    getIcon(type) {
+        const icons = {
+            success: '✅',
+            error: '❌',
+            warning: '⚠️',
+            info: 'ℹ️',
+            loading: '⏳',
+            achievement: '🏆',
+            message: '💬'
+        };
+        return icons[type] || 'ℹ️';
+    }
+    
+    getColor(type) {
+        const colors = {
+            success: '#00b14f',
+            error: '#ff4757',
+            warning: '#ffa502',
+            info: '#00b14f',
+            loading: '#0088cc',
+            achievement: '#ffa502',
+            message: '#6c757d'
+        };
+        return colors[type] || '#00b14f';
+    }
+    
+    processQueue() {
+        if (this.isShowing || this.queue.length === 0) return;
+        
+        const notification = this.queue.shift();
+        this.displayNotification(notification);
+    }
+    
+    displayNotification(notification) {
+        this.isShowing = true;
+        
+        const element = document.createElement('div');
+        element.className = `notification notification-${notification.type}`;
+        element.style.cssText = `
+            background: ${this.getColor(notification.type)};
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 9998;
-            cursor: pointer;
-            animation: slideInLeft 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 280px;
+            animation: slideInRight 0.3s ease;
+            cursor: ${notification.onClick ? 'pointer' : 'default'};
+            opacity: 1;
+            transition: opacity 0.3s;
         `;
-        demoAlert.innerHTML = `
-            <strong>🔑 Tài khoản demo:</strong> hocsinh1 / 123456
-            <br><small>Click để tự động điền</small>
-        `;
-        demoAlert.onclick = () => {
-            document.getElementById('username').value = 'hocsinh1';
-            document.getElementById('password').value = '123456';
-            demoAlert.remove();
-        };
-        document.body.appendChild(demoAlert);
         
-        setTimeout(() => demoAlert.remove(), 8000);
-    }, 2000);
+        // Icon
+        const iconSpan = document.createElement('span');
+        iconSpan.style.fontSize = '20px';
+        iconSpan.textContent = notification.icon;
+        element.appendChild(iconSpan);
+        
+        // Message
+        const messageSpan = document.createElement('span');
+        messageSpan.style.flex = '1';
+        messageSpan.style.fontSize = '14px';
+        messageSpan.style.lineHeight = '1.4';
+        messageSpan.textContent = notification.message;
+        element.appendChild(messageSpan);
+        
+        // Close button if not persistent
+        if (!notification.persistent) {
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                background: none;
+                border: none;
+                color: white;
+                font-size: 20px;
+                cursor: pointer;
+                padding: 0 5px;
+                opacity: 0.7;
+                transition: opacity 0.3s;
+            `;
+            closeBtn.onmouseover = () => closeBtn.style.opacity = '1';
+            closeBtn.onmouseout = () => closeBtn.style.opacity = '0.7';
+            closeBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.dismiss(element);
+            };
+            element.appendChild(closeBtn);
+        }
+        
+        // Action button if provided
+        if (notification.action) {
+            const actionBtn = document.createElement('button');
+            actionBtn.textContent = notification.action.text;
+            actionBtn.style.cssText = `
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.5);
+                color: white;
+                padding: 5px 12px;
+                border-radius: 5px;
+                cursor: pointer;
+                font-size: 12px;
+                transition: all 0.3s;
+                margin-left: 8px;
+            `;
+            actionBtn.onmouseover = () => {
+                actionBtn.style.background = 'rgba(255,255,255,0.3)';
+            };
+            actionBtn.onmouseout = () => {
+                actionBtn.style.background = 'rgba(255,255,255,0.2)';
+            };
+            actionBtn.onclick = (e) => {
+                e.stopPropagation();
+                notification.action.handler();
+                this.dismiss(element);
+            };
+            element.appendChild(actionBtn);
+        }
+        
+        // Click handler
+        if (notification.onClick) {
+            element.style.cursor = 'pointer';
+            element.onclick = () => {
+                notification.onClick();
+                this.dismiss(element);
+            };
+        }
+        
+        // Progress bar
+        if (!notification.persistent) {
+            const progressBar = document.createElement('div');
+            progressBar.style.cssText = `
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                height: 3px;
+                background: rgba(255,255,255,0.3);
+                width: 100%;
+            `;
+            
+            const progress = document.createElement('div');
+            progress.style.cssText = `
+                height: 100%;
+                background: white;
+                width: 100%;
+                transition: width ${notification.duration}ms linear;
+            `;
+            progressBar.appendChild(progress);
+            element.style.position = 'relative';
+            element.style.overflow = 'hidden';
+            element.appendChild(progressBar);
+            
+            setTimeout(() => {
+                progress.style.width = '0%';
+            }, 10);
+        }
+        
+        this.container.appendChild(element);
+        
+        // Auto dismiss
+        if (!notification.persistent) {
+            setTimeout(() => {
+                this.dismiss(element);
+            }, notification.duration);
+        }
+    }
+    
+    dismiss(element) {
+        if (!element || !element.parentNode) return;
+        
+        element.style.animation = 'slideOutRight 0.3s ease';
+        element.style.opacity = '0';
+        
+        setTimeout(() => {
+            if (element.parentNode) {
+                element.remove();
+            }
+            this.isShowing = false;
+            this.processQueue();
+        }, 300);
+    }
+    
+    dismissAll() {
+        this.container.innerHTML = '';
+        this.queue = [];
+        this.isShowing = false;
+    }
+    
+    success(message, options = {}) {
+        return this.show(message, 'success', options);
+    }
+    
+    error(message, options = {}) {
+        return this.show(message, 'error', options);
+    }
+    
+    warning(message, options = {}) {
+        return this.show(message, 'warning', options);
+    }
+    
+    info(message, options = {}) {
+        return this.show(message, 'info', options);
+    }
+    
+    loading(message, options = {}) {
+        return this.show(message, 'loading', { ...options, persistent: true });
+    }
+    
+    achievement(message, options = {}) {
+        return this.show(message, 'achievement', options);
+    }
 }
 
-// LƯU LỊCH SỬ ĐĂNG NHẬP
-function saveLoginHistory(username, status) {
-    try {
-        let history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.LOGIN_HISTORY) || '[]');
-        history.push({
-            username: username,
-            status: status,
-            time: new Date().toLocaleString('vi-VN'),
-            userAgent: navigator.userAgent,
-            ip: '127.0.0.1'
+// Create global notification instance
+const notifications = new NotificationSystem();
+
+// Global showNotification function (backward compatibility)
+function showNotification(message, type = 'info', duration) {
+    return notifications.show(message, type, { duration });
+}
+
+// ============================================
+// PHẦN 6: UI MANAGER
+// ============================================
+
+class UIManager {
+    constructor() {
+        this.loadingOverlay = null;
+        this.modalStack = [];
+        this.toastContainer = null;
+    }
+    
+    showLoading(message = 'Đang tải...') {
+        if (this.loadingOverlay) {
+            this.loadingOverlay.querySelector('.loading-message').textContent = message;
+            return;
+        }
+        
+        this.loadingOverlay = document.createElement('div');
+        this.loadingOverlay.className = 'loading-overlay';
+        this.loadingOverlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99998;
+        `;
+        
+        const content = document.createElement('div');
+        content.style.cssText = `
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        `;
+        
+        const spinner = document.createElement('div');
+        spinner.style.cssText = `
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00b14f;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        `;
+        
+        const messageEl = document.createElement('p');
+        messageEl.className = 'loading-message';
+        messageEl.textContent = message;
+        messageEl.style.color = '#333';
+        
+        content.appendChild(spinner);
+        content.appendChild(messageEl);
+        this.loadingOverlay.appendChild(content);
+        document.body.appendChild(this.loadingOverlay);
+        
+        // Add animation if not exists
+        if (!document.querySelector('#loading-animation')) {
+            const style = document.createElement('style');
+            style.id = 'loading-animation';
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+    }
+    
+    hideLoading() {
+        if (this.loadingOverlay) {
+            this.loadingOverlay.remove();
+            this.loadingOverlay = null;
+        }
+    }
+    
+    showModal(options) {
+        const {
+            title,
+            content,
+            buttons = [],
+            closeOnOverlay = true,
+            onClose = null,
+            size = 'medium'
+        } = options;
+        
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 99997;
+            animation: fadeIn 0.3s ease;
+        `;
+        
+        const modalContent = document.createElement('div');
+        modalContent.className = 'modal-content';
+        modalContent.style.cssText = `
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: ${size === 'small' ? '400px' : size === 'large' ? '800px' : '600px'};
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease;
+        `;
+        
+        // Header
+        if (title) {
+            const header = document.createElement('div');
+            header.style.cssText = `
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            `;
+            
+            const titleEl = document.createElement('h3');
+            titleEl.textContent = title;
+            titleEl.style.margin = '0';
+            titleEl.style.color = '#333';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #999;
+                padding: 0;
+                width: 30px;
+                height: 30px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.3s;
+            `;
+            closeBtn.onmouseover = () => {
+                closeBtn.style.background = '#f5f5f5';
+                closeBtn.style.color = '#333';
+            };
+            closeBtn.onmouseout = () => {
+                closeBtn.style.background = 'none';
+                closeBtn.style.color = '#999';
+            };
+            closeBtn.onclick = () => this.closeModal(modal);
+            
+            header.appendChild(titleEl);
+            header.appendChild(closeBtn);
+            modalContent.appendChild(header);
+        }
+        
+        // Content
+        const body = document.createElement('div');
+        body.className = 'modal-body';
+        if (typeof content === 'string') {
+            body.innerHTML = content;
+        } else if (content instanceof HTMLElement) {
+            body.appendChild(content);
+        }
+        modalContent.appendChild(body);
+        
+        // Buttons
+        if (buttons.length > 0) {
+            const footer = document.createElement('div');
+            footer.style.cssText = `
+                display: flex;
+                justify-content: flex-end;
+                gap: 10px;
+                margin-top: 20px;
+                padding-top: 20px;
+                border-top: 1px solid #eee;
+            `;
+            
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.textContent = btn.text;
+                button.style.cssText = `
+                    padding: 10px 20px;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 14px;
+                    font-weight: 500;
+                    transition: all 0.3s;
+                    border: none;
+                    background: ${btn.primary ? '#00b14f' : '#f5f5f5'};
+                    color: ${btn.primary ? 'white' : '#333'};
+                `;
+                
+                if (btn.primary) {
+                    button.onmouseover = () => button.style.background = '#008c3e';
+                    button.onmouseout = () => button.style.background = '#00b14f';
+                } else {
+                    button.onmouseover = () => button.style.background = '#e0e0e0';
+                    button.onmouseout = () => button.style.background = '#f5f5f5';
+                }
+                
+                button.onclick = async () => {
+                    if (btn.onClick) {
+                        const result = await btn.onClick();
+                        if (result !== false) {
+                            this.closeModal(modal);
+                        }
+                    } else {
+                        this.closeModal(modal);
+                    }
+                };
+                
+                footer.appendChild(button);
+            });
+            
+            modalContent.appendChild(footer);
+        }
+        
+        modal.appendChild(modalContent);
+        
+        if (closeOnOverlay) {
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    this.closeModal(modal);
+                }
+            };
+        }
+        
+        document.body.appendChild(modal);
+        this.modalStack.push({ modal, onClose });
+        
+        // Add animations if not exists
+        this.addModalAnimations();
+        
+        return modal;
+    }
+    
+    closeModal(modal) {
+        if (!modal || !modal.parentNode) return;
+        
+        const modalData = this.modalStack.find(m => m.modal === modal);
+        if (modalData?.onClose) {
+            modalData.onClose();
+        }
+        
+        modal.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            if (modal.parentNode) {
+                modal.remove();
+            }
+            this.modalStack = this.modalStack.filter(m => m.modal !== modal);
+        }, 300);
+    }
+    
+    closeAllModals() {
+        [...this.modalStack].forEach(({ modal }) => this.closeModal(modal));
+    }
+    
+    addModalAnimations() {
+        if (document.querySelector('#modal-animations')) return;
+        
+        const style = document.createElement('style');
+        style.id = 'modal-animations';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(50px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    confirm(options) {
+        return new Promise((resolve) => {
+            this.showModal({
+                title: options.title || 'Xác nhận',
+                content: options.message || 'Bạn có chắc chắn?',
+                size: 'small',
+                buttons: [
+                    {
+                        text: options.cancelText || 'Hủy',
+                        onClick: () => resolve(false)
+                    },
+                    {
+                        text: options.confirmText || 'Xác nhận',
+                        primary: true,
+                        onClick: () => resolve(true)
+                    }
+                ],
+                onClose: () => resolve(false)
+            });
         });
-        if (history.length > 50) history = history.slice(-50);
-        localStorage.setItem(CONFIG.STORAGE_KEYS.LOGIN_HISTORY, JSON.stringify(history));
-    } catch (e) {
-        console.error('Error saving login history:', e);
-    }
-}
-
-// ĐĂNG XUẤT
-function logout() {
-    trackUserActivity('logout', { username: currentUser?.username });
-    sessionStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
-    localStorage.removeItem(CONFIG.STORAGE_KEYS.USER);
-    currentUser = null;
-    
-    showNotification('Đã đăng xuất!', 'info');
-    
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 500);
-}
-
-// HIỂN THỊ THÔNG BÁO
-function showNotification(message, type = 'info', duration = CONFIG.NOTIFICATION_DURATION) {
-    const colors = {
-        success: '#00b14f',
-        error: '#ff4757',
-        warning: '#ffa502',
-        info: '#00b14f'
-    };
-    
-    const icons = {
-        success: '✅',
-        error: '❌',
-        warning: '⚠️',
-        info: 'ℹ️'
-    };
-    
-    const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        background: ${colors[type]};
-        color: white;
-        border-radius: 10px;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        z-index: 9999;
-        animation: slideInRight 0.3s;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        max-width: 350px;
-        cursor: pointer;
-    `;
-    notification.innerHTML = `${icons[type]} ${message}`;
-    notification.onclick = () => notification.remove();
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentNode) {
-            notification.style.animation = 'slideOutRight 0.3s';
-            setTimeout(() => notification.remove(), 300);
-        }
-    }, duration);
-    
-    addNotificationAnimations();
-}
-
-// THÊM ANIMATION CHO THÔNG BÁO
-function addNotificationAnimations() {
-    if (document.getElementById('notification-animations')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'notification-animations';
-    style.textContent = `
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        @keyframes slideInLeft {
-            from { transform: translateX(-100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes popIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-    `;
-    document.head.appendChild(style);
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 3: XỬ LÝ ĐĂNG KÝ
-// ============================================
-
-// XỬ LÝ ĐĂNG KÝ GOOGLE
-function handleGoogleRegister() {
-    showNotification('Tính năng đăng ký bằng Google đang phát triển!', 'warning');
-    trackUserActivity('register_google_attempt');
-    simulateOAuth('google');
-}
-
-// XỬ LÝ ĐĂNG KÝ FACEBOOK
-function handleFacebookRegister() {
-    showNotification('Tính năng đăng ký bằng Facebook đang phát triển!', 'warning');
-    trackUserActivity('register_facebook_attempt');
-    simulateOAuth('facebook');
-}
-
-// GIẢ LẬP OATH
-function simulateOAuth(provider) {
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    `;
-    
-    const popup = document.createElement('div');
-    popup.style.cssText = `
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        max-width: 400px;
-        animation: popIn 0.3s;
-    `;
-    
-    popup.innerHTML = `
-        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%2300b14f' opacity='0.2'/%3E%3Ctext x='32' y='40' text-anchor='middle' fill='%2300b14f' font-size='32'%3E${provider === 'google' ? 'G' : 'f'}</text%3E%3C/svg%3E"
-            alt="${provider}"
-            style="margin-bottom: 20px;"
-        >
-        <h3 style="margin-bottom: 15px;">Đăng nhập bằng ${provider === 'google' ? 'Google' : 'Facebook'}</h3>
-        <p style="margin-bottom: 20px; color: #666;">Đây là tính năng giả lập. Vui lòng đăng ký bằng email!</p>
-        <button style="
-            background: #00b14f;
-            color: white;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-        " onclick="this.closest('.overlay').remove()">Đóng</button>
-    `;
-    
-    overlay.className = 'overlay';
-    overlay.appendChild(popup);
-    document.body.appendChild(overlay);
-}
-
-// XỬ LÝ SUBMIT FORM ĐĂNG KÝ
-function handleRegisterSubmit(event) {
-    event.preventDefault();
-    
-    const formData = {
-        fullname: document.getElementById('fullname')?.value.trim(),
-        email: document.getElementById('email')?.value.trim(),
-        phone: document.getElementById('phone')?.value.trim(),
-        password: document.getElementById('password')?.value,
-        confirmPassword: document.getElementById('confirmPassword')?.value,
-        class: document.getElementById('class')?.value
-    };
-    
-    const errors = validateRegistration(formData);
-    
-    if (errors.length > 0) {
-        showNotification(errors[0], 'error');
-        highlightErrors(errors);
-        return;
     }
     
-    if (isEmailExists(formData.email)) {
-        showNotification('Email đã được sử dụng!', 'error');
-        return;
-    }
-    
-    saveRegistration(formData);
-    
-    showNotification('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
-    trackUserActivity('register_success', { email: formData.email });
-    
-    setTimeout(() => {
-        window.location.href = 'index.html';
-    }, 1500);
-}
-
-// VALIDATE ĐĂNG KÝ
-function validateRegistration(data) {
-    const errors = [];
-    
-    if (!data.fullname) errors.push('Họ và tên không được để trống');
-    else if (data.fullname.length < 3) errors.push('Họ và tên phải có ít nhất 3 ký tự');
-    
-    if (!data.email) errors.push('Email không được để trống');
-    else if (!isValidEmail(data.email)) errors.push('Email không hợp lệ');
-    
-    if (data.phone && !isValidPhone(data.phone)) errors.push('Số điện thoại không hợp lệ');
-    
-    if (!data.password) errors.push('Mật khẩu không được để trống');
-    else if (data.password.length < 6) errors.push('Mật khẩu phải có ít nhất 6 ký tự');
-    else if (!isStrongPassword(data.password)) errors.push('Mật khẩu phải gồm chữ hoa, chữ thường và số');
-    
-    if (data.password !== data.confirmPassword) errors.push('Mật khẩu không khớp');
-    
-    return errors;
-}
-
-// KIỂM TRA EMAIL HỢP LỆ
-function isValidEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-}
-
-// KIỂM TRA SỐ ĐIỆN THOẠI
-function isValidPhone(phone) {
-    const re = /^(0|\+84)[3-9][0-9]{8}$/;
-    return re.test(phone);
-}
-
-// KIỂM TRA MẬT KHẨU MẠNH
-function isStrongPassword(password) {
-    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/.test(password);
-}
-
-// KIỂM TRA EMAIL TỒN TẠI
-function isEmailExists(email) {
-    try {
-        const registrations = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.REGISTRATIONS) || '[]');
-        return registrations.some(r => r.email === email);
-    } catch {
-        return false;
-    }
-}
-
-// LƯU ĐĂNG KÝ
-function saveRegistration(data) {
-    try {
-        let registrations = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.REGISTRATIONS) || '[]');
-        registrations.push({
-            ...data,
-            password: '********',
-            time: new Date().toLocaleString('vi-VN'),
-            verified: false
+    prompt(options) {
+        return new Promise((resolve) => {
+            const input = document.createElement('input');
+            input.type = options.type || 'text';
+            input.placeholder = options.placeholder || '';
+            input.value = options.defaultValue || '';
+            input.style.cssText = `
+                width: 100%;
+                padding: 12px 15px;
+                border: 2px solid #e0e0e0;
+                border-radius: 5px;
+                font-size: 16px;
+                margin: 10px 0;
+            `;
+            input.onfocus = () => input.style.borderColor = '#00b14f';
+            input.onblur = () => input.style.borderColor = '#e0e0e0';
+            
+            const content = document.createElement('div');
+            content.innerHTML = `<p style="margin-bottom: 10px;">${options.message || ''}</p>`;
+            content.appendChild(input);
+            
+            this.showModal({
+                title: options.title || 'Nhập thông tin',
+                content,
+                size: 'small',
+                buttons: [
+                    {
+                        text: 'Hủy',
+                        onClick: () => resolve(null)
+                    },
+                    {
+                        text: 'Xác nhận',
+                        primary: true,
+                        onClick: () => resolve(input.value)
+                    }
+                ]
+            });
+            
+            setTimeout(() => input.focus(), 100);
         });
-        localStorage.setItem(CONFIG.STORAGE_KEYS.REGISTRATIONS, JSON.stringify(registrations));
-    } catch (e) {
-        console.error('Error saving registration:', e);
-        throw e;
+    }
+    
+    updatePageTitle(title) {
+        document.title = `${title} - ${CONFIG.APP_NAME}`;
+    }
+    
+    updateBreadcrumb(items) {
+        let breadcrumb = document.querySelector('.breadcrumb');
+        if (!breadcrumb) {
+            breadcrumb = document.createElement('div');
+            breadcrumb.className = 'breadcrumb';
+            const container = document.querySelector('.main-content .container');
+            if (container) {
+                container.insertBefore(breadcrumb, container.firstChild);
+            }
+        }
+        
+        breadcrumb.innerHTML = items.map((item, index) => {
+            if (index === items.length - 1) {
+                return `<span class="current">${item.text}</span>`;
+            }
+            return `<a href="${item.url}">${item.text}</a> <span class="separator">/</span>`;
+        }).join('');
+    }
+    
+    showEmptyState(container, options = {}) {
+        const {
+            icon = '📭',
+            title = 'Không có dữ liệu',
+            message = 'Chưa có mục nào để hiển thị',
+            actionText = null,
+            actionUrl = null
+        } = options;
+        
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.style.cssText = `
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        `;
+        
+        let html = `
+            <div style="font-size: 64px; margin-bottom: 20px;">${icon}</div>
+            <h3 style="margin-bottom: 10px; color: #666;">${title}</h3>
+            <p style="margin-bottom: 20px;">${message}</p>
+        `;
+        
+        if (actionText && actionUrl) {
+            html += `<a href="${actionUrl}" class="btn-primary" style="display: inline-block;">${actionText}</a>`;
+        }
+        
+        emptyState.innerHTML = html;
+        container.innerHTML = '';
+        container.appendChild(emptyState);
+    }
+    
+    showSkeleton(container, type = 'card', count = 3) {
+        container.innerHTML = '';
+        
+        for (let i = 0; i < count; i++) {
+            const skeleton = document.createElement('div');
+            skeleton.className = 'skeleton';
+            skeleton.style.cssText = `
+                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+                background-size: 200% 100%;
+                animation: skeleton-loading 1.5s infinite;
+                border-radius: 10px;
+                margin-bottom: 15px;
+            `;
+            
+            if (type === 'card') {
+                skeleton.style.height = '150px';
+            } else if (type === 'list') {
+                skeleton.style.height = '60px';
+            } else if (type === 'text') {
+                skeleton.style.height = '20px';
+                skeleton.style.width = `${70 + Math.random() * 30}%`;
+            }
+            
+            container.appendChild(skeleton);
+        }
+        
+        if (!document.querySelector('#skeleton-animation')) {
+            const style = document.createElement('style');
+            style.id = 'skeleton-animation';
+            style.textContent = `
+                @keyframes skeleton-loading {
+                    0% { background-position: 200% 0; }
+                    100% { background-position: -200% 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
     }
 }
 
-// HIGHLIGHT LỖI
-function highlightErrors(errors) {
-    const fields = ['fullname', 'email', 'phone', 'password', 'confirmPassword'];
-    fields.forEach(field => {
-        const input = document.getElementById(field);
-        if (input) input.style.borderColor = '#ddd';
-    });
-    
-    errors.forEach(error => {
-        if (error.includes('Họ và tên')) {
-            document.getElementById('fullname').style.borderColor = '#ff4757';
-        } else if (error.includes('Email')) {
-            document.getElementById('email').style.borderColor = '#ff4757';
-        } else if (error.includes('Mật khẩu')) {
-            document.getElementById('password').style.borderColor = '#ff4757';
-            document.getElementById('confirmPassword').style.borderColor = '#ff4757';
-        }
-    });
-}
+// Create global UI manager instance
+const ui = new UIManager();
+
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 4: XỬ LÝ GÓI HỌC
+// PHẦN 7: FORM VALIDATOR
 // ============================================
 
-const PACKAGES = {
-    basic: { 
-        name: 'Cơ bản', 
-        price: 199000, 
-        id: 'basic',
-        features: [
-            '50 bài tập/tháng',
-            '5 đề thi thử',
-            'Theo dõi tiến độ'
-        ]
+class FormValidator {
+    constructor() {
+        this.rules = {
+            required: (value) => !!value && value.toString().trim().length > 0,
+            email: (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
+            phone: (value) => /^(0|\+84)[3-9][0-9]{8}$/.test(value),
+            minLength: (value, length) => value && value.length >= length,
+            maxLength: (value, length) => value && value.length <= length,
+            min: (value, min) => Number(value) >= min,
+            max: (value, max) => Number(value) <= max,
+            pattern: (value, pattern) => new RegExp(pattern).test(value),
+            match: (value, matchValue) => value === matchValue,
+            strongPassword: (value) => /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/.test(value),
+            username: (value) => /^[a-zA-Z0-9_]{3,20}$/.test(value)
+        };
+        
+        this.messages = {
+            required: 'Trường này không được để trống',
+            email: 'Email không hợp lệ',
+            phone: 'Số điện thoại không hợp lệ',
+            minLength: 'Phải có ít nhất {0} ký tự',
+            maxLength: 'Không được vượt quá {0} ký tự',
+            min: 'Giá trị phải lớn hơn hoặc bằng {0}',
+            max: 'Giá trị phải nhỏ hơn hoặc bằng {0}',
+            pattern: 'Giá trị không đúng định dạng',
+            match: 'Giá trị không khớp',
+            strongPassword: 'Mật khẩu phải có ít nhất 6 ký tự, bao gồm chữ hoa, chữ thường và số',
+            username: 'Tên đăng nhập chỉ gồm chữ, số và dấu gạch dưới, từ 3-20 ký tự'
+        };
+    }
+    
+    validateField(value, rules) {
+        const errors = [];
+        
+        for (const [rule, param] of Object.entries(rules)) {
+            if (rule === 'required' && !value) {
+                // Skip other validations if empty and not required
+                if (rules.required) {
+                    errors.push(this.messages.required);
+                }
+                continue;
+            }
+            
+            if (!value && !rules.required) {
+                continue;
+            }
+            
+            const validator = this.rules[rule];
+            if (!validator) continue;
+            
+            let isValid;
+            if (rule === 'match') {
+                isValid = validator(value, param);
+            } else if (['minLength', 'maxLength', 'min', 'max'].includes(rule)) {
+                isValid = validator(value, param);
+            } else {
+                isValid = validator(value);
+            }
+            
+            if (!isValid) {
+                let message = this.messages[rule];
+                if (param !== undefined) {
+                    message = message.replace('{0}', param);
+                }
+                errors.push(message);
+            }
+        }
+        
+        return errors;
+    }
+    
+    validateForm(formElement, rules) {
+        const errors = {};
+        let isValid = true;
+        
+        for (const [fieldName, fieldRules] of Object.entries(rules)) {
+            const field = formElement.querySelector(`[name="${fieldName}"]`);
+            if (!field) continue;
+            
+            const value = field.value;
+            const fieldErrors = this.validateField(value, fieldRules);
+            
+            if (fieldErrors.length > 0) {
+                errors[fieldName] = fieldErrors;
+                isValid = false;
+                this.showFieldError(field, fieldErrors[0]);
+            } else {
+                this.clearFieldError(field);
+            }
+        }
+        
+        return { isValid, errors };
+    }
+    
+    showFieldError(field, message) {
+        field.style.borderColor = '#ff4757';
+        
+        let errorEl = field.parentNode.querySelector('.field-error');
+        if (!errorEl) {
+            errorEl = document.createElement('span');
+            errorEl.className = 'field-error';
+            errorEl.style.cssText = `
+                color: #ff4757;
+                font-size: 12px;
+                margin-top: 5px;
+                display: block;
+            `;
+            field.parentNode.appendChild(errorEl);
+        }
+        
+        errorEl.textContent = message;
+    }
+    
+    clearFieldError(field) {
+        field.style.borderColor = '#e0e0e0';
+        
+        const errorEl = field.parentNode.querySelector('.field-error');
+        if (errorEl) {
+            errorEl.remove();
+        }
+    }
+    
+    clearAllErrors(formElement) {
+        const fields = formElement.querySelectorAll('input, select, textarea');
+        fields.forEach(field => this.clearFieldError(field));
+    }
+    
+    validateOnInput(formElement, rules) {
+        for (const [fieldName, fieldRules] of Object.entries(rules)) {
+            const field = formElement.querySelector(`[name="${fieldName}"]`);
+            if (!field) continue;
+            
+            field.addEventListener('input', () => {
+                const value = field.value;
+                const fieldErrors = this.validateField(value, fieldRules);
+                
+                if (fieldErrors.length > 0) {
+                    this.showFieldError(field, fieldErrors[0]);
+                } else {
+                    this.clearFieldError(field);
+                }
+            });
+            
+            field.addEventListener('blur', () => {
+                const value = field.value;
+                const fieldErrors = this.validateField(value, fieldRules);
+                
+                if (fieldErrors.length > 0) {
+                    this.showFieldError(field, fieldErrors[0]);
+                }
+            });
+        }
+    }
+}
+
+// Create global validator instance
+const validator = new FormValidator();
+
+// ============================================
+// PHẦN 8: ROUTER & PAGE MANAGER
+// ============================================
+
+class Router {
+    constructor() {
+        this.routes = new Map();
+        this.currentPage = null;
+        this.pageData = {};
+        this.guards = [];
+        this.history = [];
+    }
+    
+    register(path, handler, options = {}) {
+        this.routes.set(path, {
+            handler,
+            options,
+            pattern: this.pathToRegex(path)
+        });
+    }
+    
+    pathToRegex(path) {
+        const pattern = path
+            .replace(/:[^/]+/g, '([^/]+)')
+            .replace(/\*/g, '.*');
+        return new RegExp(`^${pattern}$`);
+    }
+    
+    addGuard(guard) {
+        this.guards.push(guard);
+    }
+    
+    async navigate(path, data = {}) {
+        // Check guards
+        for (const guard of this.guards) {
+            const canNavigate = await guard(path);
+            if (!canNavigate) {
+                console.log('Navigation blocked by guard');
+                return false;
+            }
+        }
+        
+        // Find matching route
+        let matchedRoute = null;
+        let params = {};
+        
+        for (const [routePath, route] of this.routes) {
+            const match = path.match(route.pattern);
+            if (match) {
+                matchedRoute = route;
+                // Extract params
+                const paramNames = (routePath.match(/:[^/]+/g) || [])
+                    .map(p => p.slice(1));
+                paramNames.forEach((name, index) => {
+                    params[name] = match[index + 1];
+                });
+                break;
+            }
+        }
+        
+        if (!matchedRoute) {
+            console.error('No route found for path:', path);
+            return false;
+        }
+        
+        // Save history
+        this.history.push({ path, data, timestamp: Date.now() });
+        if (this.history.length > 50) {
+            this.history.shift();
+        }
+        
+        // Update browser history
+        if (matchedRoute.options.updateHistory !== false) {
+            history.pushState({ path, data }, '', path);
+        }
+        
+        // Execute handler
+        this.currentPage = path;
+        this.pageData = data;
+        
+        try {
+            ui.showLoading();
+            await matchedRoute.handler(params, data);
+            analytics.trackPageView(path);
+        } catch (error) {
+            console.error('Error loading page:', error);
+            analytics.trackError(error, { page: path });
+            this.showErrorPage(error);
+        } finally {
+            ui.hideLoading();
+        }
+        
+        return true;
+    }
+    
+    back() {
+        if (this.history.length > 1) {
+            this.history.pop(); // Remove current
+            const previous = this.history.pop(); // Get previous
+            if (previous) {
+                this.navigate(previous.path, previous.data);
+            }
+        } else {
+            history.back();
+        }
+    }
+    
+    showErrorPage(error) {
+        const container = document.querySelector('.main-content .container');
+        if (container) {
+            container.innerHTML = `
+                <div class="error-page" style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">😵</div>
+                    <h2>Đã xảy ra lỗi</h2>
+                    <p style="color: #666; margin: 20px 0;">${error.message || 'Không thể tải trang'}</p>
+                    <button class="btn-primary" onclick="location.reload()">Tải lại trang</button>
+                    <button class="btn-secondary" onclick="router.navigate('/dashboard')">Về trang chủ</button>
+                </div>
+            `;
+        }
+    }
+    
+    getCurrentQueryParams() {
+        const params = new URLSearchParams(window.location.search);
+        const result = {};
+        for (const [key, value] of params) {
+            result[key] = value;
+        }
+        return result;
+    }
+    
+    updateQueryParams(params) {
+        const url = new URL(window.location);
+        Object.entries(params).forEach(([key, value]) => {
+            if (value === null || value === undefined) {
+                url.searchParams.delete(key);
+            } else {
+                url.searchParams.set(key, value);
+            }
+        });
+        history.replaceState(null, '', url);
+    }
+}
+
+// Create global router instance
+const router = new Router();
+
+// ============================================
+// PHẦN 9: PAGE HANDLERS
+// ============================================
+
+const pageHandlers = {
+    // Dashboard page
+    async dashboard(params, data) {
+        ui.updatePageTitle('Bảng điều khiển');
+        
+        if (!appState.currentUser) {
+            router.navigate('/');
+            return;
+        }
+        
+        updateUserInterface();
+        loadDashboardStats();
+        loadRecentActivities();
+        loadRecommendations();
+        checkAndShowDailyBonus();
     },
-    pro: { 
-        name: 'Pro', 
-        price: 399000, 
-        id: 'pro',
-        features: [
-            '200 bài tập/tháng',
-            '20 đề thi thử',
-            'Theo dõi tiến độ',
-            'Hỏi đáp với giáo viên',
-            'Bài giảng video'
-        ]
+    
+    // Login page
+    async login(params, data) {
+        ui.updatePageTitle('Đăng nhập');
+        
+        if (appState.currentUser) {
+            router.navigate('/dashboard');
+            return;
+        }
+        
+        setupLoginForm();
     },
-    vip: { 
-        name: 'VIP', 
-        price: 799000, 
-        id: 'vip',
-        features: [
-            'Không giới hạn bài tập',
-            '50 đề thi thử',
-            'Theo dõi tiến độ',
-            'Hỏi đáp với giáo viên',
-            'Bài giảng video',
-            'Kèm 1-1 với giáo viên'
-        ]
+    
+    // Exercise page
+    async exercise(params, data) {
+        const exerciseId = params.id || router.getCurrentQueryParams().id;
+        
+        if (!exerciseId) {
+            router.navigate('/luyen-tap');
+            return;
+        }
+        
+        const exercise = window.getExerciseById?.(exerciseId);
+        if (!exercise) {
+            ui.showEmptyState(document.querySelector('.main-content .container'), {
+                title: 'Không tìm thấy bài tập',
+                message: 'Bài tập này không tồn tại hoặc đã bị xóa',
+                actionText: 'Về danh sách bài tập',
+                actionUrl: 'luyen-tap.html'
+            });
+            return;
+        }
+        
+        ui.updatePageTitle(exercise.title);
+        appState.currentExercise = exerciseId;
+        appState.currentQuestions = window.getQuestionsByExerciseId?.(exerciseId) || [];
+        appState.currentAnswers = new Array(appState.currentQuestions.length).fill(null);
+        appState.currentQuestionIndex = 0;
+        
+        renderExerciseInterface(exercise);
+        
+        // Check for saved progress
+        const progress = appState.loadProgress();
+        if (progress && progress.id === exerciseId) {
+            const shouldResume = await ui.confirm({
+                title: 'Tiếp tục làm bài',
+                message: 'Bạn có bài tập đang làm dở. Tiếp tục?'
+            });
+            
+            if (shouldResume) {
+                appState.currentAnswers = progress.answers;
+                appState.currentQuestionIndex = progress.questionIndex;
+            } else {
+                appState.clearProgress();
+            }
+        }
+        
+        analytics.trackExerciseStart(exerciseId, exercise);
+    },
+    
+    // Exam page
+    async exam(params, data) {
+        const examId = params.id || router.getCurrentQueryParams().id;
+        
+        if (!examId) {
+            router.navigate('/thi-thu');
+            return;
+        }
+        
+        const exam = window.exams?.find(e => e.id == examId);
+        if (!exam) {
+            ui.showEmptyState(document.querySelector('.main-content .container'), {
+                title: 'Không tìm thấy đề thi',
+                message: 'Đề thi này không tồn tại',
+                actionText: 'Về danh sách đề thi',
+                actionUrl: 'thi-thu.html'
+            });
+            return;
+        }
+        
+        ui.updatePageTitle(exam.name);
+        renderExamDetail(exam);
+    },
+    
+    // Taking exam page
+    async takingExam(params, data) {
+        const examData = JSON.parse(sessionStorage.getItem('current_exam'));
+        if (!examData) {
+            router.navigate('/thi-thu');
+            return;
+        }
+        
+        appState.currentExam = examData.exam;
+        appState.currentQuestions = examData.questions;
+        appState.currentAnswers = new Array(appState.currentQuestions.length).fill(null);
+        appState.currentQuestionIndex = 0;
+        appState.examTimeLeft = appState.currentExam.time * 60;
+        appState.examStartTime = examData.startTime;
+        
+        ui.updatePageTitle(appState.currentExam.name);
+        renderExamInterface();
+        startExamTimer();
+        
+        analytics.trackExamStart(appState.currentExam.id, appState.currentExam);
+    },
+    
+    // Result page
+    async result(params, data) {
+        const queryParams = router.getCurrentQueryParams();
+        const score = queryParams.score;
+        const correct = queryParams.correct;
+        const total = queryParams.total;
+        
+        ui.updatePageTitle('Kết quả bài tập');
+        renderResultPage({ score, correct, total });
+    },
+    
+    // Exam result page
+    async examResult(params, data) {
+        const queryParams = router.getCurrentQueryParams();
+        renderExamResultPage(queryParams);
+    },
+    
+    // Courses page
+    async courses(params, data) {
+        ui.updatePageTitle('Khóa học');
+        loadCoursesList();
+        setupCourseFilters();
+    },
+    
+    // Practice page
+    async practice(params, data) {
+        ui.updatePageTitle('Luyện tập');
+        loadExercisesList();
+        setupExerciseFilters();
+    },
+    
+    // Mock exam page
+    async mockExam(params, data) {
+        ui.updatePageTitle('Thi thử');
+        loadExamsList();
+    },
+    
+    // Ranking page
+    async ranking(params, data) {
+        ui.updatePageTitle('Bảng xếp hạng');
+        loadRankingPage();
+    },
+    
+    // Profile page
+    async profile(params, data) {
+        ui.updatePageTitle('Tài khoản');
+        
+        if (!appState.currentUser) {
+            router.navigate('/');
+            return;
+        }
+        
+        loadProfilePage();
+    },
+    
+    // Packages page
+    async packages(params, data) {
+        ui.updatePageTitle('Gói học');
+        loadPackagesPage();
+    },
+    
+    // Payment page
+    async payment(params, data) {
+        ui.updatePageTitle('Thanh toán');
+        loadPaymentPage();
+    },
+    
+    // History page
+    async history(params, data) {
+        ui.updatePageTitle('Lịch sử học tập');
+        
+        if (!appState.currentUser) {
+            router.navigate('/');
+            return;
+        }
+        
+        loadHistoryPage();
+    },
+    
+    // Register page
+    async register(params, data) {
+        ui.updatePageTitle('Đăng ký');
+        
+        if (appState.currentUser) {
+            router.navigate('/dashboard');
+            return;
+        }
+        
+        setupRegisterForm();
     }
 };
 
-function selectPackage(packageType) {
-    const selectedPackage = PACKAGES[packageType];
-    if (!selectedPackage) return;
-    
-    sessionStorage.setItem(CONFIG.STORAGE_KEYS.PACKAGE, JSON.stringify(selectedPackage));
-    updatePaymentInfo(selectedPackage);
-    suggestPackage(selectedPackage);
-    
-    const currentPage = window.location.pathname.split('/').pop();
-    if (currentPage !== 'thanh-toan.html') {
-        showNotification(`Bạn đã chọn gói ${selectedPackage.name}. Đang chuyển đến thanh toán...`, 'success');
-        setTimeout(() => {
-            window.location.href = 'thanh-toan.html';
-        }, 1500);
-    }
-}
-
-function suggestPackage(selectedPackage) {
-    const history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY) || '[]');
-    const monthlyExercises = history.filter(h => {
-        const date = new Date(h.date);
-        const now = new Date();
-        return date.getMonth() === now.getMonth();
-    }).length;
-    
-    let suggestion = '';
-    if (monthlyExercises > 150) {
-        suggestion = 'Gói VIP phù hợp với nhu cầu học tập của bạn!';
-    } else if (monthlyExercises > 50) {
-        suggestion = 'Gói Pro là lựa chọn tốt nhất cho bạn!';
-    }
-    
-    if (suggestion && selectedPackage.name !== 'VIP' && monthlyExercises > 150) {
-        setTimeout(() => {
-            showNotification(suggestion, 'info', 5000);
-        }, 2000);
-    }
-}
-
-function updatePaymentInfo(pkg) {
-    const elements = {
-        packageName: document.getElementById('packageName'),
-        packagePrice: document.getElementById('packagePrice'),
-        totalPrice: document.getElementById('totalPrice')
-    };
-    
-    if (pkg) {
-        if (elements.packageName) elements.packageName.textContent = pkg.name;
-        if (elements.packagePrice) elements.packagePrice.textContent = formatCurrency(pkg.price);
-        if (elements.totalPrice) elements.totalPrice.textContent = formatCurrency(pkg.price);
-    }
-}
-
-function formatCurrency(amount) {
-    return amount.toLocaleString() + 'đ';
-}
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 5: XỬ LÝ THANH TOÁN
+// PHẦN 10: INITIALIZATION & EVENT LISTENERS
 // ============================================
 
-function selectPayment(method) {
-    const selectedPackage = JSON.parse(sessionStorage.getItem(CONFIG.STORAGE_KEYS.PACKAGE));
+function initializeApp() {
+    console.log(`🚀 Initializing ${CONFIG.APP_NAME} v${CONFIG.VERSION}...`);
     
-    if (!selectedPackage) {
-        showNotification('Vui lòng chọn gói học trước!', 'warning');
-        return;
+    // Initialize app state
+    appState.initialize();
+    
+    // Initialize AI assistant
+    if (appState.currentUser) {
+        aiAssistant.initialize(appState.currentUser.id);
     }
     
-    const transaction = createTransaction(selectedPackage, method);
-    saveTransaction(transaction);
-    processPaymentByMethod(transaction);
+    // Setup router
+    setupRoutes();
+    
+    // Setup global event listeners
+    setupGlobalEvents();
+    
+    // Initialize current page
+    initializeCurrentPage();
+    
+    // Check for updates
+    checkForUpdates();
+    
+    // Preload common data
+    preloadData();
+    
+    // Show welcome back message
+    if (appState.currentUser) {
+        const lastLogin = appState.currentUser.lastLogin;
+        if (lastLogin) {
+            const daysSince = Math.floor((Date.now() - new Date(lastLogin)) / (1000 * 60 * 60 * 24));
+            if (daysSince > 0) {
+                setTimeout(() => {
+                    showNotification(`Chào mừng trở lại! Lần cuối đăng nhập: ${daysSince} ngày trước`, 'info');
+                }, 1000);
+            }
+        }
+    }
+    
+    console.log('✅ App initialized successfully!');
 }
 
-function createTransaction(pkg, method) {
-    return {
-        id: 'TXN' + Date.now() + Math.floor(Math.random() * 1000),
-        package: pkg,
-        method: method,
-        amount: pkg.price,
-        time: new Date().toISOString(),
-        user: currentUser?.name || 'Khách',
-        userEmail: currentUser?.email || '',
-        userId: currentUser?.id || null,
-        status: 'pending'
-    };
-}
-
-function saveTransaction(transaction) {
-    try {
-        let transactions = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.TRANSACTIONS) || '[]');
-        transactions.push(transaction);
-        localStorage.setItem(CONFIG.STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-        trackUserActivity('transaction_created', { 
-            transactionId: transaction.id,
-            amount: transaction.amount,
-            method: transaction.method
+function setupRoutes() {
+    // Register all routes
+    router.register('/', pageHandlers.login);
+    router.register('/index.html', pageHandlers.login);
+    router.register('/dashboard.html', pageHandlers.dashboard);
+    router.register('/bai-tap.html', pageHandlers.exercise);
+    router.register('/thi.html', pageHandlers.exam);
+    router.register('/lam-bai-thi.html', pageHandlers.takingExam);
+    router.register('/ket-qua.html', pageHandlers.result);
+    router.register('/ket-qua-thi.html', pageHandlers.examResult);
+    router.register('/khoa-hoc.html', pageHandlers.courses);
+    router.register('/luyen-tap.html', pageHandlers.practice);
+    router.register('/thi-thu.html', pageHandlers.mockExam);
+    router.register('/bang-xep-hang.html', pageHandlers.ranking);
+    router.register('/tai-khoan.html', pageHandlers.profile);
+    router.register('/mua-goi.html', pageHandlers.packages);
+    router.register('/thanh-toan.html', pageHandlers.payment);
+    router.register('/lich-su.html', pageHandlers.history);
+    router.register('/register.html', pageHandlers.register);
+    
+    // Class pages
+    for (let i = 1; i <= 5; i++) {
+        router.register(`/lop-${i}.html`, async () => {
+            ui.updatePageTitle(`Lớp ${i}`);
+            loadClassPage(i);
         });
-    } catch (e) {
-        console.error('Error saving transaction:', e);
     }
+    
+    // Subject pages
+    const subjects = ['toan', 'van', 'anh'];
+    subjects.forEach(subject => {
+        for (let i = 1; i <= 5; i++) {
+            router.register(`/${subject}-${i}.html`, async () => {
+                const subjectNames = { toan: 'Toán', van: 'Tiếng Việt', anh: 'Tiếng Anh' };
+                ui.updatePageTitle(`${subjectNames[subject]} lớp ${i}`);
+                loadSubjectPage(subject, i);
+            });
+        }
+    });
+    
+    // Add authentication guard
+    router.addGuard(async (path) => {
+        const publicPaths = ['/', '/index.html', '/register.html', '/forgot-password.html'];
+        
+        if (publicPaths.includes(path)) {
+            return true;
+        }
+        
+        if (!appState.currentUser) {
+            showNotification('Vui lòng đăng nhập để tiếp tục!', 'warning');
+            router.navigate('/');
+            return false;
+        }
+        
+        return true;
+    });
 }
 
-function processPaymentByMethod(transaction) {
-    const methodHandlers = {
-        momo: () => simulatePayment(transaction, 'Ví MoMo', '#a50064'),
-        vnpay: () => simulatePayment(transaction, 'VNPAY', '#003399'),
-        zalopay: () => simulatePayment(transaction, 'ZaloPay', '#0066ff'),
-        bank: () => simulatePayment(transaction, 'Thẻ ATM', '#333333'),
-        credit: () => simulatePayment(transaction, 'Thẻ tín dụng', '#444444')
-    };
+function setupGlobalEvents() {
+    // Handle browser back/forward
+    window.addEventListener('popstate', (event) => {
+        if (event.state) {
+            router.navigate(event.state.path, event.state.data);
+        }
+    });
     
-    const handler = methodHandlers[transaction.method];
-    if (handler) handler();
-    else simulatePayment(transaction, 'Cổng thanh toán', '#00b14f');
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Escape to close modals
+        if (e.key === 'Escape') {
+            ui.closeAllModals();
+        }
+        
+        // Ctrl/Cmd + K for search
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            showSearchModal();
+        }
+        
+        // Ctrl/Cmd + / for shortcuts help
+        if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+            e.preventDefault();
+            showShortcutsHelp();
+        }
+    });
+    
+    // Handle before unload
+    window.addEventListener('beforeunload', (e) => {
+        if (appState.currentExercise || appState.currentExam) {
+            appState.saveProgress();
+            e.preventDefault();
+            e.returnValue = 'Bạn có bài tập đang làm dở. Bạn có chắc muốn rời đi?';
+        }
+    });
+    
+    // Handle visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            appState.saveProgress();
+        }
+    });
+    
+    // Handle online/offline
+    window.addEventListener('online', () => {
+        appState.isOnline = true;
+        showNotification('Đã kết nối internet', 'success');
+    });
+    
+    window.addEventListener('offline', () => {
+        appState.isOnline = false;
+        showNotification('Mất kết nối internet. Đang chuyển sang chế độ ngoại tuyến.', 'warning');
+    });
 }
 
-function simulatePayment(transaction, methodName, color) {
-    const popup = document.createElement('div');
-    popup.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        z-index: 10000;
-        text-align: center;
-        min-width: 350px;
-        animation: popIn 0.3s;
-    `;
+function initializeCurrentPage() {
+    const path = window.location.pathname.split('/').pop() || 'index.html';
+    const queryParams = router.getCurrentQueryParams();
     
-    popup.innerHTML = `
-        <div style="width: 80px; height: 80px; background: ${color}; border-radius: 50%; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center;">
-            <span style="color: white; font-size: 40px;">💰</span>
-        </div>
-        <h3 style="margin-bottom: 15px;">Đang xử lý thanh toán</h3>
-        <p style="margin-bottom: 10px; color: #666;">Phương thức: <strong>${methodName}</strong></p>
-        <p style="margin-bottom: 20px; font-size: 24px; color: #00b14f; font-weight: bold;">${formatCurrency(transaction.amount)}</p>
-        <div style="width: 100%; height: 4px; background: #eee; border-radius: 2px; overflow: hidden;">
-            <div class="payment-progress" style="width: 0%; height: 100%; background: ${color}; transition: width 0.1s;"></div>
-        </div>
-        <p class="payment-status" style="margin-top: 15px; color: #666;">Đang kết nối cổng thanh toán...</p>
-    `;
-    
-    document.body.appendChild(popup);
-    
-    const steps = [
-        { progress: 20, status: 'Đang kết nối cổng thanh toán...' },
-        { progress: 40, status: 'Đang xác thực thông tin...' },
-        { progress: 60, status: 'Đang xử lý giao dịch...' },
-        { progress: 80, status: 'Đang chờ xác nhận...' },
-        { progress: 100, status: 'Hoàn tất!' }
+    // Find and execute matching route
+    const routes = [
+        { pattern: /^index\.html$|^$/, handler: pageHandlers.login },
+        { pattern: /^dashboard\.html$/, handler: pageHandlers.dashboard },
+        { pattern: /^bai-tap\.html$/, handler: pageHandlers.exercise },
+        { pattern: /^thi\.html$/, handler: pageHandlers.exam },
+        { pattern: /^lam-bai-thi\.html$/, handler: pageHandlers.takingExam },
+        { pattern: /^ket-qua\.html$/, handler: pageHandlers.result },
+        { pattern: /^ket-qua-thi\.html$/, handler: pageHandlers.examResult },
+        { pattern: /^khoa-hoc\.html$/, handler: pageHandlers.courses },
+        { pattern: /^luyen-tap\.html$/, handler: pageHandlers.practice },
+        { pattern: /^thi-thu\.html$/, handler: pageHandlers.mockExam },
+        { pattern: /^bang-xep-hang\.html$/, handler: pageHandlers.ranking },
+        { pattern: /^tai-khoan\.html$/, handler: pageHandlers.profile },
+        { pattern: /^mua-goi\.html$/, handler: pageHandlers.packages },
+        { pattern: /^thanh-toan\.html$/, handler: pageHandlers.payment },
+        { pattern: /^lich-su\.html$/, handler: pageHandlers.history },
+        { pattern: /^register\.html$/, handler: pageHandlers.register },
+        { pattern: /^lop-[1-5]\.html$/, handler: (params) => {
+            const classId = path.match(/lop-([1-5])/)?.[1];
+            if (classId) loadClassPage(parseInt(classId));
+        }},
+        { pattern: /^(toan|van|anh)-[1-5]\.html$/, handler: (params) => {
+            const match = path.match(/^(toan|van|anh)-([1-5])/);
+            if (match) loadSubjectPage(match[1], parseInt(match[2]));
+        }}
     ];
     
-    let currentStep = 0;
-    const progressBar = popup.querySelector('.payment-progress');
-    const statusEl = popup.querySelector('.payment-status');
-    
-    const interval = setInterval(() => {
-        if (currentStep < steps.length) {
-            const step = steps[currentStep];
-            if (progressBar) progressBar.style.width = step.progress + '%';
-            if (statusEl) statusEl.textContent = step.status;
-            currentStep++;
-        } else {
-            clearInterval(interval);
-            setTimeout(() => {
-                if (popup.parentNode) {
-                    popup.remove();
-                    completePayment(transaction);
-                }
-            }, 500);
+    for (const route of routes) {
+        if (route.pattern.test(path)) {
+            route.handler({ query: queryParams });
+            break;
         }
-    }, 600);
+    }
 }
 
-function completePayment(transaction) {
-    try {
-        let transactions = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.TRANSACTIONS) || '[]');
-        const savedTransaction = transactions.find(t => t.id === transaction.id);
-        if (savedTransaction) {
-            savedTransaction.status = 'completed';
-            savedTransaction.completedAt = new Date().toISOString();
-            localStorage.setItem(CONFIG.STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-        }
-    } catch (e) {
-        console.error('Error updating transaction:', e);
-    }
-    
-    if (currentUser) {
-        currentUser.package = transaction.package.id;
-        currentUser.packageExpire = calculateExpireDate();
-        saveUserData();
-    }
-    
-    showNotification('Thanh toán thành công! Cảm ơn bạn đã sử dụng dịch vụ của VioEdu.', 'success');
-    trackUserActivity('payment_success', { 
-        transactionId: transaction.id,
-        amount: transaction.amount 
-    });
-    
-    setTimeout(() => {
-        window.location.href = 'dashboard.html';
-    }, 2000);
-}
-
-function calculateExpireDate() {
-    const date = new Date();
-    date.setMonth(date.getMonth() + 1);
-    return date.toISOString().split('T')[0];
-}
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 6: LOAD NỘI DUNG TRANG
+// PHẦN 11: UI UPDATE FUNCTIONS
 // ============================================
 
-function loadPageContent() {
-    const path = window.location.pathname.split('/').pop();
+function updateUserInterface() {
+    if (!appState.currentUser) return;
     
-    switch(path) {
-        case 'luyen-tap.html':
-            loadExercises();
-            break;
-        case 'thi-thu.html':
-            loadExams();
-            break;
-        case 'dashboard.html':
-            loadDashboard();
-            break;
-        case 'thanh-toan.html':
-            loadPaymentInfo();
-            break;
-        case 'khoa-hoc.html':
-            loadCourses();
-            break;
-        case 'bang-xep-hang.html':
-            loadRanking('week');
-            break;
-        case 'tai-khoan.html':
-            loadProfile();
-            break;
-        case 'lich-su.html':
-            loadStudyHistory();
-            break;
-        default:
-            if (path.includes('bai-tap.html')) {
-                loadExerciseDetail();
-            } else if (path.includes('thi.html')) {
-                loadExamDetail();
-            }
-    }
-}
-
-function loadDashboard() {
-    if (!currentUser) {
-        const user = sessionStorage.getItem(CONFIG.STORAGE_KEYS.USER) || 
-                     localStorage.getItem(CONFIG.STORAGE_KEYS.USER);
-        if (user) currentUser = JSON.parse(user);
+    const user = appState.currentUser;
+    
+    // Update user name elements
+    document.querySelectorAll('.user-name, #userName, #userNameDisplay, #welcomeName, #profileName')
+        .forEach(el => { if (el) el.textContent = user.name; });
+    
+    // Update avatar elements
+    document.querySelectorAll('.avatar, #userAvatar')
+        .forEach(el => { if (el) el.textContent = user.name.charAt(0); });
+    
+    // Update package info
+    const packageEl = document.getElementById('currentPackage');
+    if (packageEl) {
+        const packageNames = { basic: 'Gói Cơ bản', pro: 'Gói Pro', vip: 'Gói VIP', none: 'Chưa có gói' };
+        packageEl.textContent = packageNames[user.package] || 'Gói Cơ bản';
     }
     
-    updateUserInfo();
-    updateStats();
-    loadRecommendedExams();
-    loadRecentActivities();
+    const expireEl = document.getElementById('packageExpire');
+    if (expireEl && user.packageExpire) {
+        expireEl.textContent = window.formatDate?.(user.packageExpire) || user.packageExpire;
+    }
+    
+    // Update points and rank
+    const pointsEl = document.getElementById('userPoints');
+    if (pointsEl) pointsEl.textContent = window.formatNumber?.(user.points) || user.points;
+    
+    const rankEl = document.getElementById('userRank');
+    if (rankEl) rankEl.textContent = `#${user.rank || '--'}`;
 }
 
-function updateUserInfo() {
-    if (!currentUser) return;
-    
-    const elements = {
-        userName: document.querySelectorAll('.user-name'),
-        avatar: document.querySelectorAll('.avatar'),
-        welcomeName: document.getElementById('welcomeName'),
-        userNameDisplay: document.getElementById('userName'),
-        userAvatar: document.getElementById('userAvatar'),
-        profileName: document.getElementById('profileName'),
-        profileClass: document.getElementById('profileClass'),
-        userPoints: document.getElementById('userPoints'),
-        userRank: document.getElementById('userRank')
-    };
-    
-    elements.userName?.forEach(el => {
-        if (el) el.textContent = currentUser.name;
-    });
-    
-    elements.avatar?.forEach(el => {
-        if (el) el.textContent = currentUser.name.charAt(0);
-    });
-    
-    if (elements.welcomeName) elements.welcomeName.textContent = currentUser.name;
-    if (elements.userNameDisplay) elements.userNameDisplay.textContent = currentUser.name;
-    if (elements.userAvatar) elements.userAvatar.textContent = currentUser.name.charAt(0);
-    if (elements.profileName) elements.profileName.textContent = currentUser.name;
-    if (elements.profileClass) elements.profileClass.textContent = `Lớp ${currentUser.class}`;
-    if (elements.userPoints) elements.userPoints.textContent = formatNumber(currentUser.points || 0);
-    if (elements.userRank) elements.userRank.textContent = '#' + (currentUser.rank || 12);
-}
-
-function updateStats() {
-    const stats = {
-        totalExercises: document.getElementById('totalExercises'),
-        completedExercises: document.getElementById('completedExercises'),
-        avgScore: document.getElementById('avgScore'),
-        studyTime: document.getElementById('studyTime'),
-        streak: document.getElementById('streak'),
-        rank: document.getElementById('rank')
-    };
+function loadDashboardStats() {
+    if (!appState.currentUser) return;
     
     const history = window.studyHistory || [];
-    const total = history.length;
-    const completed = history.filter(h => h.status === 'completed').length;
-    const avgScore = history.length ? 
-        Math.round(history.reduce((sum, h) => sum + (h.score || 0), 0) / history.length) : 85;
+    const userHistory = history.filter(h => h.status === 'completed');
     
-    if (stats.totalExercises) stats.totalExercises.textContent = total || '156';
-    if (stats.completedExercises) stats.completedExercises.textContent = completed || '98';
-    if (stats.avgScore) stats.avgScore.textContent = avgScore + '%';
-    if (stats.studyTime) stats.studyTime.textContent = dailyGoals?.timeSpent || '127h';
-    if (stats.streak) stats.streak.textContent = (dailyGoals?.streak || 7) + ' ngày';
-    if (stats.rank) stats.rank.textContent = '#' + (currentUser?.rank || 12);
-}
-
-function loadRecommendedExams() {
-    const container = document.querySelector('.recommended-exams');
-    if (!container) return;
+    // Update stat cards
+    const totalExercises = document.getElementById('totalExercises');
+    if (totalExercises) totalExercises.textContent = userHistory.length || '156';
     
-    const exams = window.exams || [];
-    const recommended = exams.slice(0, 3);
+    const completedExercises = document.getElementById('completedExercises');
+    if (completedExercises) completedExercises.textContent = userHistory.length || '98';
     
-    let html = '';
-    recommended.forEach(exam => {
-        html += `
-            <div class="exam-item" onclick="location.href='thi.html?id=${exam.id}'">
-                <h4>${exam.name}</h4>
-                <p>${exam.questions} câu - ${exam.time} phút</p>
-                <span class="tag">⭐ ${exam.rating}</span>
-            </div>
-        `;
-    });
+    const avgScore = document.getElementById('avgScore');
+    if (avgScore) {
+        const avg = userHistory.length > 0 
+            ? Math.round(userHistory.reduce((s, h) => s + h.score, 0) / userHistory.length)
+            : 85;
+        avgScore.textContent = avg + '%';
+    }
     
-    container.innerHTML = html || '<p>Chưa có đề thi gợi ý</p>';
+    const studyTime = document.getElementById('studyTime');
+    if (studyTime) {
+        const totalTime = userHistory.reduce((s, h) => s + (h.timeSpent || 0), 0);
+        studyTime.textContent = window.formatTime?.(totalTime) || totalTime + ' phút';
+    }
 }
 
 function loadRecentActivities() {
     const container = document.getElementById('recentActivities');
     if (!container) return;
     
-    const history = window.studyHistory?.slice(0, 5) || [];
+    const history = window.studyHistory || [];
+    const recent = history.slice(0, 5);
     
-    let html = '';
-    history.forEach(item => {
-        const icon = item.status === 'completed' ? '✅' : '⏳';
-        html += `
-            <li>
-                <i class="fas ${item.status === 'completed' ? 'fa-check-circle' : 'fa-clock'}"></i>
-                <div>
-                    <strong>${item.exercise}</strong>
-                    <p>${item.subjectName} - ${item.score ? 'Đạt ' + item.score + '%' : 'Chưa hoàn thành'}</p>
-                    <small>${item.date}</small>
-                </div>
-            </li>
-        `;
-    });
+    if (recent.length === 0) {
+        container.innerHTML = '<li class="empty-activity">Chưa có hoạt động nào</li>';
+        return;
+    }
     
-    container.innerHTML = html || '<li>Chưa có hoạt động</li>';
+    container.innerHTML = recent.map(item => `
+        <li>
+            <i class="fas ${item.status === 'completed' ? 'fa-check-circle' : 'fa-clock'}"></i>
+            <div>
+                <strong>${item.exercise}</strong>
+                <p>${item.subjectName || item.subject} - ${item.score ? `Đạt ${item.score}%` : 'Chưa hoàn thành'}</p>
+                <small>${window.formatDate?.(item.date) || item.date}</small>
+            </div>
+        </li>
+    `).join('');
 }
+
+function loadRecommendations() {
+    const container = document.querySelector('.recommended-exams');
+    if (!container || !appState.currentUser) return;
+    
+    const recommendations = aiAssistant.getRecommendations(appState.currentUser.id);
+    
+    if (recommendations.length === 0) {
+        container.innerHTML = '<p class="no-data">Không có gợi ý</p>';
+        return;
+    }
+    
+    container.innerHTML = recommendations.map(rec => `
+        <div class="exam-item" onclick="location.href='${rec.type === 'exam' ? 'thi.html' : 'bai-tap.html'}?id=${rec.id}'">
+            <h4>${rec.title}</h4>
+            <p>${rec.reason}</p>
+            <span class="tag">${rec.priority === 'high' ? '⭐ Đề xuất' : '📌 Gợi ý'}</span>
+        </div>
+    `).join('');
+}
+
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 7: LOAD BÀI TẬP
+// PHẦN 12: AUTHENTICATION FUNCTIONS
 // ============================================
 
-function loadExercises() {
-    const container = document.getElementById('exercisesList');
+function setupLoginForm() {
+    const loginForm = document.querySelector('.login-panel');
+    if (!loginForm) return;
+    
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const loginBtn = document.querySelector('.btn-login');
+    
+    if (loginBtn) {
+        loginBtn.onclick = handleLogin;
+    }
+    
+    // Enter to submit
+    [usernameInput, passwordInput].forEach(input => {
+        if (input) {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+        }
+    });
+    
+    // Demo account hint
+    setTimeout(() => {
+        const demoHint = document.createElement('div');
+        demoHint.style.cssText = `
+            margin-top: 15px;
+            padding: 10px;
+            background: #f0f7ff;
+            border-radius: 5px;
+            font-size: 13px;
+            color: #0088cc;
+            text-align: center;
+            cursor: pointer;
+        `;
+        demoHint.innerHTML = '🔑 <strong>Tài khoản demo:</strong> hocsinh1 / 123456<br><small>Click để tự động điền</small>';
+        demoHint.onclick = () => {
+            document.getElementById('username').value = 'hocsinh1';
+            document.getElementById('password').value = '123456';
+        };
+        loginForm.appendChild(demoHint);
+    }, 500);
+}
+
+function handleLogin() {
+    const username = document.getElementById('username')?.value.trim();
+    const password = document.getElementById('password')?.value.trim();
+    const rememberMe = document.querySelector('.checkbox input')?.checked || false;
+    
+    if (!username || !password) {
+        showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
+        return;
+    }
+    
+    ui.showLoading('Đang đăng nhập...');
+    
+    // Simulate API call
+    setTimeout(() => {
+        const user = window.fakeUsers?.find(u => u.username === username && u.password === password);
+        
+        ui.hideLoading();
+        
+        if (user) {
+            appState.currentUser = {
+                ...user,
+                rememberMe,
+                lastLogin: new Date().toISOString()
+            };
+            
+            appState.saveUserState();
+            
+            analytics.trackEvent('auth', 'login_success', username);
+            showNotification(`Đăng nhập thành công! Chào mừng ${user.name}`, 'success');
+            
+            // Initialize AI
+            aiAssistant.initialize(user.id);
+            
+            setTimeout(() => {
+                window.location.href = 'dashboard.html';
+            }, 1000);
+        } else {
+            analytics.trackEvent('auth', 'login_failed', username);
+            showNotification('Sai tên đăng nhập hoặc mật khẩu!', 'error');
+        }
+    }, 800);
+}
+
+function handleLogout() {
+    analytics.trackEvent('auth', 'logout');
+    appState.logout();
+}
+
+function setupRegisterForm() {
+    const registerForm = document.getElementById('registerForm');
+    if (!registerForm) return;
+    
+    // Setup validation
+    const rules = {
+        fullname: { required: true, minLength: 3 },
+        email: { required: true, email: true },
+        password: { required: true, strongPassword: true },
+        confirmPassword: { required: true, match: () => document.getElementById('password')?.value }
+    };
+    
+    validator.validateOnInput(registerForm, rules);
+    
+    registerForm.onsubmit = (e) => {
+        e.preventDefault();
+        handleRegister();
+    };
+}
+
+function handleRegister() {
+    const fullname = document.getElementById('fullname')?.value.trim();
+    const email = document.getElementById('email')?.value.trim();
+    const password = document.getElementById('password')?.value;
+    const confirmPassword = document.getElementById('confirmPassword')?.value;
+    const className = document.getElementById('class')?.value;
+    
+    if (password !== confirmPassword) {
+        showNotification('Mật khẩu không khớp!', 'error');
+        return;
+    }
+    
+    ui.showLoading('Đang đăng ký...');
+    
+    setTimeout(() => {
+        ui.hideLoading();
+        
+        analytics.trackEvent('auth', 'register', email);
+        showNotification('Đăng ký thành công! Vui lòng đăng nhập.', 'success');
+        
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1500);
+    }, 1000);
+}
+
+// ============================================
+// PHẦN 13: EXERCISE FUNCTIONS
+// ============================================
+
+function renderExerciseInterface(exercise) {
+    const container = document.querySelector('.main-content .container');
     if (!container) return;
     
-    const classFilter = document.getElementById('filterClass')?.value || 'all';
-    const subjectFilter = document.getElementById('filterSubject')?.value || 'all';
-    const statusFilter = document.getElementById('filterStatus')?.value || 'all';
+    const totalQuestions = appState.currentQuestions.length;
     
-    let exercises = Object.values(window.exercises || {});
-    
-    if (classFilter !== 'all') {
-        exercises = exercises.filter(ex => ex.class == classFilter);
-    }
-    if (subjectFilter !== 'all') {
-        exercises = exercises.filter(ex => ex.subject === subjectFilter);
-    }
-    if (statusFilter !== 'all') {
-        exercises = exercises.filter(ex => {
-            if (statusFilter === 'completed') return ex.completed === true;
-            if (statusFilter === 'pending') return ex.completed === false;
-            return true;
-        });
-    }
-    
-    if (exercises.length === 0) {
-        container.innerHTML = '<div class="no-data">Không có bài tập nào</div>';
-        return;
-    }
-    
-    let html = '';
-    exercises.forEach(ex => {
-        const progressPercent = ex.completed ? 100 : 0;
-        const statusText = ex.completed ? 'Đã hoàn thành' : 'Chưa làm';
-        const statusClass = ex.completed ? 'completed' : 'pending';
-        
-        html += `
-            <div class="exercise-card" onclick="location.href='bai-tap.html?id=${ex.id}'">
-                <div class="exercise-header">
-                    <h3>${ex.title}</h3>
-                    <span class="subject-badge ${ex.subject}">${ex.subjectName || ex.subject} ${ex.class}</span>
-                </div>
-                <p>${ex.questions} câu hỏi - ${ex.time} phút</p>
-                <div class="progress-bar">
-                    <div class="progress" style="width: ${progressPercent}%"></div>
-                </div>
-                <span class="status ${statusClass}">${statusText}</span>
+    container.innerHTML = `
+        <h2>${exercise.title}</h2>
+        <div class="exercise-header">
+            <div class="timer">
+                <i class="far fa-clock"></i> Thời gian: <span id="timeDisplay">${formatTimeDisplay(exercise.time * 60)}</span>
             </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-function loadExerciseDetail() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const exerciseId = urlParams.get('id');
-    
-    if (!exerciseId) {
-        showNotification('Không tìm thấy bài tập!', 'error');
-        return;
-    }
-    
-    const exercise = window.exercises?.[exerciseId];
-    if (!exercise) {
-        showNotification('Bài tập không tồn tại!', 'error');
-        return;
-    }
-    
-    currentExercise = exerciseId;
-    currentQuestions = window.questions?.[exerciseId] || [];
-    currentAnswers = new Array(currentQuestions.length).fill(null);
-    currentQuestionIndex = 0;
-    
-    updateExerciseUI();
-}
-
-function updateExerciseUI() {
-    const titleEl = document.querySelector('h2');
-    if (titleEl) titleEl.textContent = currentExercise?.title || 'Bài tập';
-    
-    const timerEl = document.getElementById('time');
-    if (timerEl) timerEl.textContent = formatTime(currentExercise?.time * 60 || 1200);
+            <div class="exercise-progress">
+                <span id="progressText">0/${totalQuestions}</span> câu đã làm
+            </div>
+        </div>
+        <div class="question-nav" id="questionNav"></div>
+        <div class="question-container" id="questionContainer"></div>
+    `;
     
     renderQuestionNav();
     renderQuestion();
+    
+    // Start timer if not started
+    startExerciseTimer(exercise.time * 60);
+}
+
+let exerciseTimer = null;
+let exerciseTimeLeft = 0;
+
+function startExerciseTimer(duration) {
+    exerciseTimeLeft = duration;
+    
+    if (exerciseTimer) clearInterval(exerciseTimer);
+    
+    exerciseTimer = setInterval(() => {
+        exerciseTimeLeft--;
+        
+        const timeDisplay = document.getElementById('timeDisplay');
+        if (timeDisplay) {
+            timeDisplay.textContent = formatTimeDisplay(exerciseTimeLeft);
+        }
+        
+        if (exerciseTimeLeft <= 0) {
+            clearInterval(exerciseTimer);
+            submitExercise();
+        }
+    }, 1000);
+}
+
+function formatTimeDisplay(seconds) {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
 function renderQuestionNav() {
-    const navContainer = document.querySelector('.question-nav');
-    if (!navContainer) return;
+    const nav = document.getElementById('questionNav');
+    if (!nav) return;
     
+    const total = appState.currentQuestions.length;
     let html = '';
-    for (let i = 0; i < currentQuestions.length; i++) {
-        const answered = currentAnswers[i] !== null;
+    
+    for (let i = 0; i < total; i++) {
+        const isAnswered = appState.currentAnswers[i] !== null;
+        const isActive = i === appState.currentQuestionIndex;
+        
         html += `
-            <button class="q-nav-btn ${i === currentQuestionIndex ? 'active' : ''} 
-                    ${answered ? 'answered' : ''}" 
+            <button class="q-nav-btn ${isActive ? 'active' : ''} ${isAnswered ? 'answered' : ''}"
                     onclick="goToQuestion(${i})">
                 ${i + 1}
             </button>
         `;
     }
-    navContainer.innerHTML = html;
+    
+    nav.innerHTML = html;
+    
+    // Update progress text
+    const progressText = document.getElementById('progressText');
+    if (progressText) {
+        const answered = appState.currentAnswers.filter(a => a !== null).length;
+        progressText.textContent = `${answered}/${total}`;
+    }
 }
 
 function renderQuestion() {
-    if (currentQuestions.length === 0) {
-        document.querySelector('.question-container').innerHTML = '<p>Không có câu hỏi</p>';
-        return;
-    }
+    const container = document.getElementById('questionContainer');
+    if (!container) return;
     
-    const q = currentQuestions[currentQuestionIndex];
+    const q = appState.currentQuestions[appState.currentQuestionIndex];
     if (!q) return;
     
-    const container = document.querySelector('.question-container');
-    const isLastQuestion = currentQuestionIndex === currentQuestions.length - 1;
+    const isLast = appState.currentQuestionIndex === appState.currentQuestions.length - 1;
+    const currentAnswer = appState.currentAnswers[appState.currentQuestionIndex];
     
     let html = `
-        <h3>Câu ${currentQuestionIndex + 1}/${currentQuestions.length}</h3>
+        <h3>Câu ${appState.currentQuestionIndex + 1}/${appState.currentQuestions.length}</h3>
         <p class="question-text">${q.question}</p>
         <div class="options">
     `;
     
     q.options.forEach((opt, index) => {
-        const checked = currentAnswers[currentQuestionIndex] === index ? 'checked' : '';
+        const checked = currentAnswer === index ? 'checked' : '';
         html += `
             <label class="option">
-                <input type="radio" name="q${currentQuestionIndex}" 
-                       value="${index}" ${checked} onchange="saveAnswer(${currentQuestionIndex}, ${index})">
+                <input type="radio" name="q${appState.currentQuestionIndex}" 
+                       value="${index}" ${checked} onchange="saveAnswer(${appState.currentQuestionIndex}, ${index})">
                 ${opt}
             </label>
         `;
@@ -1194,16 +3008,16 @@ function renderQuestion() {
     
     html += `<div class="question-nav-buttons">`;
     
-    if (currentQuestionIndex > 0) {
-        html += `<button class="btn-prev" onclick="prevQuestion()">Câu trước</button>`;
+    if (appState.currentQuestionIndex > 0) {
+        html += `<button class="btn-prev" onclick="prevQuestion()">← Câu trước</button>`;
     } else {
-        html += `<button class="btn-prev" disabled>Trước</button>`;
+        html += `<button class="btn-prev" disabled>← Câu trước</button>`;
     }
     
-    if (isLastQuestion) {
-        html += `<button class="btn-submit" onclick="submitExercise()">Nộp bài</button>`;
+    if (isLast) {
+        html += `<button class="btn-submit" onclick="submitExercise()">Nộp bài ✓</button>`;
     } else {
-        html += `<button class="btn-next" onclick="nextQuestion()">Câu tiếp</button>`;
+        html += `<button class="btn-next" onclick="nextQuestion()">Câu tiếp →</button>`;
     }
     
     html += `</div>`;
@@ -1212,172 +3026,200 @@ function renderQuestion() {
 }
 
 function saveAnswer(questionIndex, answerIndex) {
-    currentAnswers[questionIndex] = answerIndex;
+    appState.currentAnswers[questionIndex] = answerIndex;
     renderQuestionNav();
     
-    if (appSettings.autoNext && questionIndex < currentQuestions.length - 1) {
+    if (appState.settings.autoNext && questionIndex < appState.currentQuestions.length - 1) {
         setTimeout(() => nextQuestion(), 300);
     }
 }
 
 function goToQuestion(index) {
-    if (index >= 0 && index < currentQuestions.length) {
-        currentQuestionIndex = index;
+    if (index >= 0 && index < appState.currentQuestions.length) {
+        appState.currentQuestionIndex = index;
         renderQuestion();
         renderQuestionNav();
     }
 }
 
 function nextQuestion() {
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-        currentQuestionIndex++;
+    if (appState.currentQuestionIndex < appState.currentQuestions.length - 1) {
+        appState.currentQuestionIndex++;
         renderQuestion();
         renderQuestionNav();
     }
 }
 
 function prevQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
+    if (appState.currentQuestionIndex > 0) {
+        appState.currentQuestionIndex--;
         renderQuestion();
         renderQuestionNav();
     }
 }
 
 function submitExercise() {
-    const unanswered = currentAnswers.reduce((count, ans, idx) => {
-        return ans === null ? count + 1 : count;
-    }, 0);
+    if (exerciseTimer) {
+        clearInterval(exerciseTimer);
+    }
+    
+    const unanswered = appState.currentAnswers.filter(a => a === null).length;
     
     if (unanswered > 0) {
-        if (!confirm(`Bạn còn ${unanswered} câu chưa trả lời. Vẫn nộp bài?`)) {
-            return;
-        }
+        ui.confirm({
+            title: 'Xác nhận nộp bài',
+            message: `Bạn còn ${unanswered} câu chưa trả lời. Vẫn nộp bài?`
+        }).then(confirmed => {
+            if (confirmed) {
+                processExerciseSubmission();
+            }
+        });
+    } else {
+        processExerciseSubmission();
     }
-    
+}
+
+function processExerciseSubmission() {
     let correct = 0;
-    currentQuestions.forEach((q, index) => {
-        if (currentAnswers[index] === q.answer) correct++;
+    appState.currentQuestions.forEach((q, index) => {
+        if (appState.currentAnswers[index] === q.answer) correct++;
     });
     
-    const score = Math.round((correct / currentQuestions.length) * 100);
+    const score = Math.round((correct / appState.currentQuestions.length) * 100);
     
-    saveStudyHistory({
-        exerciseId: currentExercise,
-        score: score,
-        correct: correct,
-        total: currentQuestions.length,
-        answers: currentAnswers,
-        timeSpent: currentExercise?.time || 20
-    });
+    // Save to history
+    const exercise = window.getExerciseById?.(appState.currentExercise);
     
-    if (dailyGoals) {
-        dailyGoals.exercisesDone++;
-        dailyGoals.timeSpent += currentExercise?.time || 20;
-        saveDailyGoals();
-    }
-    
-    window.location.href = `ket-qua.html?score=${score}&correct=${correct}&total=${currentQuestions.length}`;
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 8: XỬ LÝ ĐỀ THI
-// ============================================
-
-function loadExams() {
-    const container = document.getElementById('examsList');
-    if (!container) return;
-    
-    const exams = window.exams || [];
-    
-    if (exams.length === 0) {
-        container.innerHTML = '<div class="no-data">Không có đề thi nào</div>';
-        return;
-    }
-    
-    let html = '';
-    exams.forEach(exam => {
-        html += `
-            <div class="exam-item" onclick="location.href='thi.html?id=${exam.id}'">
-                <div class="exam-info">
-                    <h4>${exam.name}</h4>
-                    <p><i class="far fa-clock"></i> ${exam.time} phút - <i class="far fa-file-alt"></i> ${exam.questions} câu</p>
-                    <p class="exam-meta">Đã có ${(exam.attempts || 0).toLocaleString()} lượt làm</p>
-                </div>
-                <span class="exam-tag">⭐ ${exam.rating || 4.8}</span>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
-}
-
-function loadExamDetail() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const examId = urlParams.get('id');
-    
-    if (!examId) {
-        showNotification('Không tìm thấy đề thi!', 'error');
-        return;
-    }
-    
-    const exam = window.exams?.find(e => e.id == examId);
-    if (!exam) {
-        showNotification('Đề thi không tồn tại!', 'error');
-        return;
-    }
-    
-    currentExam = exam;
-    
-    const examInfo = document.querySelector('.exam-info');
-    if (examInfo) {
-        examInfo.innerHTML = `
-            <h2>${exam.name}</h2>
-            <p><i class="far fa-clock"></i> Thời gian: ${exam.time} phút</p>
-            <p><i class="far fa-file-alt"></i> Số câu: ${exam.questions} câu</p>
-            <p><i class="fas fa-star"></i> Độ khó: ${exam.difficulty || 'Trung bình'}</p>
-        `;
-    }
-    
-    const startBtn = document.querySelector('.btn-start');
-    if (startBtn) {
-        startBtn.onclick = () => startExam(exam);
-    }
-}
-
-function startExam(exam) {
-    // Tạo đề thi ngẫu nhiên từ ngân hàng câu hỏi
-    const allQuestions = window.questionBank?.[exam.subject] || [];
-    const selectedQuestions = [];
-    
-    // Chọn ngẫu nhiên số câu theo cấu trúc đề
-    const questionCounts = exam.structure || {
-        easy: Math.floor(exam.questions * 0.3),
-        medium: Math.floor(exam.questions * 0.5),
-        hard: exam.questions - Math.floor(exam.questions * 0.3) - Math.floor(exam.questions * 0.5)
+    const result = {
+        exerciseId: appState.currentExercise,
+        exercise: exercise?.title || 'Bài tập',
+        subject: exercise?.subject || 'toan',
+        subjectName: exercise?.subjectName || 'Toán',
+        class: exercise?.class || 5,
+        score,
+        correct,
+        total: appState.currentQuestions.length,
+        timeSpent: Math.round((exercise?.time * 60 - exerciseTimeLeft) / 60),
+        date: new Date().toISOString().split('T')[0],
+        status: 'completed',
+        answers: [...appState.currentAnswers]
     };
     
-    // Lấy câu hỏi theo độ khó
-    ['easy', 'medium', 'hard'].forEach(level => {
-        const levelQuestions = allQuestions.filter(q => q.difficulty === level);
-        const shuffled = shuffleArray(levelQuestions);
-        selectedQuestions.push(...shuffled.slice(0, questionCounts[level]));
+    // Save to study history
+    let history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY) || '[]');
+    history.push(result);
+    localStorage.setItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY, JSON.stringify(history));
+    
+    // Track analytics
+    analytics.trackExerciseComplete(appState.currentExercise, result);
+    
+    // Clear progress
+    appState.clearProgress();
+    appState.currentExercise = null;
+    appState.currentQuestions = [];
+    appState.currentAnswers = [];
+    
+    // Redirect to result
+    window.location.href = `ket-qua.html?score=${score}&correct=${correct}&total=${appState.currentQuestions.length}`;
+}
+
+// ============================================
+// PHẦN 14: EXAM FUNCTIONS
+// ============================================
+
+function renderExamDetail(exam) {
+    const container = document.querySelector('.main-content .container');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div class="exam-detail-container">
+            <div class="exam-detail-header">
+                <h1>${exam.name}</h1>
+                <div class="exam-meta-info">
+                    <span class="exam-badge ${exam.subject}">${exam.subjectName}</span>
+                    <span class="exam-badge">Lớp ${exam.class}</span>
+                </div>
+            </div>
+            
+            <div class="exam-info-grid">
+                <div class="exam-info-card">
+                    <i class="fas fa-question-circle"></i>
+                    <div>
+                        <span class="info-label">Số câu hỏi</span>
+                        <span class="info-value">${exam.questions} câu</span>
+                    </div>
+                </div>
+                <div class="exam-info-card">
+                    <i class="far fa-clock"></i>
+                    <div>
+                        <span class="info-label">Thời gian</span>
+                        <span class="info-value">${exam.time} phút</span>
+                    </div>
+                </div>
+                <div class="exam-info-card">
+                    <i class="fas fa-users"></i>
+                    <div>
+                        <span class="info-label">Lượt làm</span>
+                        <span class="info-value">${window.formatNumber?.(exam.attempts) || exam.attempts} lượt</span>
+                    </div>
+                </div>
+                <div class="exam-info-card">
+                    <i class="fas fa-star"></i>
+                    <div>
+                        <span class="info-label">Đánh giá</span>
+                        <span class="info-value">⭐ ${exam.rating}/5</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="exam-description">
+                <h3>Mô tả đề thi</h3>
+                <p>${exam.description}</p>
+            </div>
+            
+            <div class="exam-start-section">
+                <button class="btn-start-exam" onclick="startExam(${exam.id})">
+                    <i class="fas fa-play"></i> Bắt đầu làm bài
+                </button>
+                <p class="exam-note">Thời gian sẽ được tính từ khi bạn bắt đầu làm bài.</p>
+            </div>
+        </div>
+    `;
+}
+
+function startExam(examId) {
+    const exam = window.exams?.find(e => e.id == examId);
+    if (!exam) return;
+    
+    // Generate questions for exam
+    const questions = generateExamQuestions(exam);
+    
+    const examData = {
+        exam,
+        questions,
+        startTime: Date.now()
+    };
+    
+    sessionStorage.setItem('current_exam', JSON.stringify(examData));
+    window.location.href = 'lam-bai-thi.html';
+}
+
+function generateExamQuestions(exam) {
+    // Get questions from bank
+    const allQuestions = [];
+    
+    // Combine questions from relevant exercises
+    const exercises = Object.values(window.exercises || {}).filter(ex => 
+        ex.subject === exam.subject && ex.class === exam.class
+    );
+    
+    exercises.forEach(ex => {
+        const questions = window.questions?.[ex.id] || [];
+        allQuestions.push(...questions);
     });
     
-    // Xáo trộn lại để trộn các cấp độ
-    currentQuestions = shuffleArray(selectedQuestions);
-    currentAnswers = new Array(currentQuestions.length).fill(null);
-    currentQuestionIndex = 0;
-    examTimeLeft = exam.time * 60;
-    examStartTime = Date.now();
-    
-    // Chuyển đến trang làm bài
-    sessionStorage.setItem('current_exam', JSON.stringify({
-        exam: exam,
-        questions: currentQuestions,
-        startTime: examStartTime
-    }));
-    
-    window.location.href = 'lam-bai-thi.html';
+    // Shuffle and limit
+    return shuffleArray(allQuestions).slice(0, exam.questions);
 }
 
 function shuffleArray(array) {
@@ -1388,100 +3230,110 @@ function shuffleArray(array) {
     }
     return newArray;
 }
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 9: XỬ LÝ BÀI THI
-// ============================================
 
-function loadExamTaking() {
-    const examData = JSON.parse(sessionStorage.getItem('current_exam'));
-    if (!examData) {
-        window.location.href = 'thi-thu.html';
-        return;
-    }
+function renderExamInterface() {
+    const container = document.querySelector('.main-content .container');
+    if (!container) return;
     
-    currentExam = examData.exam;
-    currentQuestions = examData.questions;
-    currentAnswers = new Array(currentQuestions.length).fill(null);
-    currentQuestionIndex = 0;
-    examTimeLeft = currentExam.time * 60;
-    examStartTime = examData.startTime;
+    container.innerHTML = `
+        <div class="exam-header">
+            <h2 id="examTitle">${appState.currentExam.name}</h2>
+            <div class="exam-info-bar">
+                <span class="exam-subject">${appState.currentExam.subjectName} - Lớp ${appState.currentExam.class}</span>
+                <div class="timer" id="examTimer">
+                    <i class="far fa-clock"></i> 
+                    <span id="timeDisplay">${formatTimeDisplay(appState.examTimeLeft)}</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="question-nav" id="questionNav"></div>
+        <div class="question-container" id="questionContainer"></div>
+        
+        <div class="exam-actions">
+            <button class="btn-mark" id="markBtn" onclick="toggleMarkQuestion()">
+                <i class="far fa-flag"></i> Đánh dấu câu hỏi
+            </button>
+            <button class="btn-submit-exam" onclick="submitExam()">
+                <i class="fas fa-check-circle"></i> Nộp bài
+            </button>
+        </div>
+    `;
     
-    document.title = `Đang làm bài: ${currentExam.name}`;
-    
-    const titleEl = document.querySelector('h2');
-    if (titleEl) titleEl.textContent = currentExam.name;
-    
-    startExamTimer();
-    renderExamQuestion();
     renderExamQuestionNav();
+    renderExamQuestion();
 }
 
 function startExamTimer() {
-    if (examTimer) clearInterval(examTimer);
+    if (appState.examTimer) clearInterval(appState.examTimer);
     
-    const timerEl = document.getElementById('time');
-    if (!timerEl) return;
-    
-    examTimer = setInterval(() => {
-        examTimeLeft--;
+    appState.examTimer = setInterval(() => {
+        appState.examTimeLeft--;
         
-        if (examTimeLeft <= 0) {
-            clearInterval(examTimer);
-            submitExam(true);
-            return;
+        const timeDisplay = document.getElementById('timeDisplay');
+        const timerEl = document.getElementById('examTimer');
+        
+        if (timeDisplay) {
+            timeDisplay.textContent = formatTimeDisplay(appState.examTimeLeft);
         }
         
-        const minutes = Math.floor(examTimeLeft / 60);
-        const seconds = examTimeLeft % 60;
-        timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        // Warning at 5 minutes
+        if (appState.examTimeLeft === 300) {
+            showNotification('Chỉ còn 5 phút! Hãy nhanh lên!', 'warning');
+            if (timerEl) timerEl.classList.add('warning');
+        }
         
-        // Cảnh báo khi còn 5 phút
-        if (examTimeLeft === 300) {
-            showNotification('Chỉ còn 5 phút!', 'warning');
+        if (appState.examTimeLeft <= 0) {
+            clearInterval(appState.examTimer);
+            submitExam(true);
         }
     }, 1000);
 }
 
 function renderExamQuestionNav() {
-    const navContainer = document.querySelector('.question-nav');
-    if (!navContainer) return;
+    const nav = document.getElementById('questionNav');
+    if (!nav) return;
     
+    const total = appState.currentQuestions.length;
     let html = '';
-    for (let i = 0; i < currentQuestions.length; i++) {
-        const answered = currentAnswers[i] !== null;
-        const isActive = i === currentQuestionIndex;
+    
+    for (let i = 0; i < total; i++) {
+        const isAnswered = appState.currentAnswers[i] !== null;
+        const isActive = i === appState.currentQuestionIndex;
+        
         html += `
-            <button class="q-nav-btn ${isActive ? 'active' : ''} 
-                    ${answered ? 'answered' : ''}" 
+            <button class="q-nav-btn ${isActive ? 'active' : ''} ${isAnswered ? 'answered' : ''}"
                     onclick="goToExamQuestion(${i})">
                 ${i + 1}
             </button>
         `;
     }
-    navContainer.innerHTML = html;
+    
+    nav.innerHTML = html;
 }
 
 function renderExamQuestion() {
-    if (currentQuestions.length === 0) return;
+    const container = document.getElementById('questionContainer');
+    if (!container) return;
     
-    const q = currentQuestions[currentQuestionIndex];
+    const q = appState.currentQuestions[appState.currentQuestionIndex];
     if (!q) return;
     
-    const container = document.querySelector('.question-container');
-    const isLastQuestion = currentQuestionIndex === currentQuestions.length - 1;
+    const currentAnswer = appState.currentAnswers[appState.currentQuestionIndex];
+    const isLast = appState.currentQuestionIndex === appState.currentQuestions.length - 1;
     
     let html = `
-        <h3>Câu ${currentQuestionIndex + 1}/${currentQuestions.length}</h3>
+        <h3>Câu ${appState.currentQuestionIndex + 1}/${appState.currentQuestions.length}</h3>
         <p class="question-text">${q.question}</p>
         <div class="options">
     `;
     
     q.options.forEach((opt, index) => {
-        const checked = currentAnswers[currentQuestionIndex] === index ? 'checked' : '';
+        const checked = currentAnswer === index ? 'checked' : '';
         html += `
             <label class="option">
-                <input type="radio" name="q${currentQuestionIndex}" 
-                       value="${index}" ${checked} onchange="saveExamAnswer(${currentQuestionIndex}, ${index})">
+                <input type="radio" name="q${appState.currentQuestionIndex}" 
+                       value="${index}" ${checked} onchange="saveExamAnswer(${appState.currentQuestionIndex}, ${index})">
                 ${opt}
             </label>
         `;
@@ -1491,16 +3343,14 @@ function renderExamQuestion() {
     
     html += `<div class="question-nav-buttons">`;
     
-    if (currentQuestionIndex > 0) {
-        html += `<button class="btn-prev" onclick="prevExamQuestion()">Câu trước</button>`;
+    if (appState.currentQuestionIndex > 0) {
+        html += `<button class="btn-prev" onclick="prevExamQuestion()">← Câu trước</button>`;
     } else {
-        html += `<button class="btn-prev" disabled>Trước</button>`;
+        html += `<button class="btn-prev" disabled>← Câu trước</button>`;
     }
     
-    html += `<button class="btn-next" onclick="nextExamQuestion()">Câu tiếp</button>`;
-    
-    if (isLastQuestion) {
-        html += `<button class="btn-submit" onclick="submitExam()">Nộp bài</button>`;
+    if (!isLast) {
+        html += `<button class="btn-next" onclick="nextExamQuestion()">Câu tiếp →</button>`;
     }
     
     html += `</div>`;
@@ -1509,165 +3359,434 @@ function renderExamQuestion() {
 }
 
 function saveExamAnswer(questionIndex, answerIndex) {
-    currentAnswers[questionIndex] = answerIndex;
+    appState.currentAnswers[questionIndex] = answerIndex;
     renderExamQuestionNav();
 }
 
 function goToExamQuestion(index) {
-    if (index >= 0 && index < currentQuestions.length) {
-        currentQuestionIndex = index;
+    if (index >= 0 && index < appState.currentQuestions.length) {
+        appState.currentQuestionIndex = index;
         renderExamQuestion();
         renderExamQuestionNav();
     }
 }
 
 function nextExamQuestion() {
-    if (currentQuestionIndex < currentQuestions.length - 1) {
-        currentQuestionIndex++;
+    if (appState.currentQuestionIndex < appState.currentQuestions.length - 1) {
+        appState.currentQuestionIndex++;
         renderExamQuestion();
         renderExamQuestionNav();
     }
 }
 
 function prevExamQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
+    if (appState.currentQuestionIndex > 0) {
+        appState.currentQuestionIndex--;
         renderExamQuestion();
         renderExamQuestionNav();
     }
 }
 
-function submitExam(timeout = false) {
-    clearInterval(examTimer);
-    
-    if (timeout) {
-        showNotification('Hết thời gian làm bài!', 'warning');
-    }
-    
-    const unanswered = currentAnswers.reduce((count, ans) => ans === null ? count + 1 : count, 0);
-    
-    if (unanswered > 0 && !timeout) {
-        if (!confirm(`Bạn còn ${unanswered} câu chưa trả lời. Vẫn nộp bài?`)) {
-            startExamTimer();
-            return;
-        }
-    }
-    
-    let correct = 0;
-    currentQuestions.forEach((q, index) => {
-        if (currentAnswers[index] === q.answer) correct++;
-    });
-    
-    const score = Math.round((correct / currentQuestions.length) * 100);
-    const timeSpent = Math.floor((Date.now() - examStartTime) / 1000);
-    
-    const examResult = {
-        examId: currentExam.id,
-        examName: currentExam.name,
-        score: score,
-        correct: correct,
-        total: currentQuestions.length,
-        timeSpent: timeSpent,
-        date: new Date().toISOString(),
-        answers: currentAnswers
-    };
-    
-    // Lưu lịch sử
-    let examHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
-    examHistory.push(examResult);
-    localStorage.setItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY, JSON.stringify(examHistory));
-    
-    // Cập nhật daily goals
-    if (dailyGoals) {
-        dailyGoals.examsDone++;
-        dailyGoals.timeSpent += Math.floor(timeSpent / 60);
-        saveDailyGoals();
-    }
-    
-    // Xóa session
-    sessionStorage.removeItem('current_exam');
-    
-    window.location.href = `ket-qua-thi.html?score=${score}&correct=${correct}&total=${currentQuestions.length}&exam=${currentExam.id}`;
-}// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 10: XỬ LÝ KẾT QUẢ
-// ============================================
-
-function loadExamResult() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const score = urlParams.get('score') || '80';
-    const correct = urlParams.get('correct') || '4';
-    const total = urlParams.get('total') || '5';
-    const examId = urlParams.get('exam');
-    
-    const scoreEl = document.querySelector('.score-number');
-    const correctEl = document.querySelector('.result-details p');
-    const examInfo = document.querySelector('.exam-info');
-    
-    if (scoreEl) scoreEl.textContent = score;
-    if (correctEl) correctEl.textContent = `Đúng ${correct}/${total} câu`;
-    
-    // Hiển thị phân tích
-    showScoreAnalysis(score);
-    
-    // Gợi ý bài học
-    if (examId) {
-        suggestNextSteps(score, examId);
+function toggleMarkQuestion() {
+    const btn = document.getElementById('markBtn');
+    if (btn) {
+        btn.classList.toggle('marked');
+        const isMarked = btn.classList.contains('marked');
+        showNotification(isMarked ? 'Đã đánh dấu câu hỏi' : 'Đã bỏ đánh dấu', 'info');
     }
 }
 
-function showScoreAnalysis(score) {
-    const analysisEl = document.querySelector('.score-analysis');
-    if (!analysisEl) return;
-    
-    let analysis = '';
-    let advice = '';
-    
-    if (score >= 90) {
-        analysis = 'Xuất sắc!';
-        advice = 'Bạn đã nắm rất vững kiến thức. Hãy thử sức với đề thi nâng cao hơn.';
-    } else if (score >= 70) {
-        analysis = 'Khá tốt!';
-        advice = 'Bạn cần ôn lại một số phần còn yếu. Xem gợi ý bên dưới.';
-    } else if (score >= 50) {
-        analysis = 'Cần cố gắng hơn';
-        advice = 'Bạn nên ôn lại kiến thức cơ bản trước khi làm đề tiếp theo.';
-    } else {
-        analysis = 'Cần ôn tập lại';
-        advice = 'Hãy bắt đầu từ những bài học cơ bản nhất.';
+function submitExam(timeout = false) {
+    if (appState.examTimer) {
+        clearInterval(appState.examTimer);
     }
     
-    analysisEl.innerHTML = `
-        <h3>Phân tích kết quả</h3>
-        <p class="analysis-text">${analysis}</p>
-        <p class="advice-text">${advice}</p>
+    if (timeout) {
+        showNotification('Hết giờ làm bài!', 'warning');
+        processExamSubmission();
+        return;
+    }
+    
+    const unanswered = appState.currentAnswers.filter(a => a === null).length;
+    
+    ui.confirm({
+        title: 'Xác nhận nộp bài',
+        message: `Bạn còn ${unanswered} câu chưa trả lời. Vẫn nộp bài?`
+    }).then(confirmed => {
+        if (confirmed) {
+            processExamSubmission();
+        } else {
+            startExamTimer();
+        }
+    });
+}
+
+function processExamSubmission() {
+    let correct = 0;
+    appState.currentQuestions.forEach((q, index) => {
+        if (appState.currentAnswers[index] === q.answer) correct++;
+    });
+    
+    const score = Math.round((correct / appState.currentQuestions.length) * 100);
+    const timeSpent = Math.round((appState.currentExam.time * 60 - appState.examTimeLeft) / 60);
+    
+    const result = {
+        examId: appState.currentExam.id,
+        examName: appState.currentExam.name,
+        score,
+        correct,
+        total: appState.currentQuestions.length,
+        timeSpent,
+        date: new Date().toISOString()
+    };
+    
+    analytics.trackExamComplete(appState.currentExam.id, result);
+    
+    sessionStorage.removeItem('current_exam');
+    window.location.href = `ket-qua-thi.html?score=${score}&correct=${correct}&total=${appState.currentQuestions.length}&exam=${appState.currentExam.id}`;
+}
+
+// ============================================
+// PHẦN 15: UTILITY FUNCTIONS
+// ============================================
+
+function checkAndShowDailyBonus() {
+    const lastBonus = localStorage.getItem('last_daily_bonus');
+    const today = new Date().toDateString();
+    
+    if (lastBonus !== today) {
+        setTimeout(() => {
+            ui.showModal({
+                title: '🎁 Quà tặng hàng ngày',
+                content: `
+                    <div style="text-align: center;">
+                        <div style="font-size: 64px; margin-bottom: 20px;">🎁</div>
+                        <h3 style="margin-bottom: 10px;">Nhận ${CONFIG.GAME_CONFIG.DAILY_BONUS} điểm thưởng!</h3>
+                        <p style="color: #666;">Đăng nhập mỗi ngày để nhận điểm thưởng</p>
+                        <p style="margin-top: 15px;">Streak hiện tại: 🔥 ${appState.dailyGoals.streak} ngày</p>
+                    </div>
+                `,
+                buttons: [
+                    {
+                        text: 'Nhận thưởng',
+                        primary: true,
+                        onClick: () => {
+                            if (appState.currentUser) {
+                                appState.currentUser.points = (appState.currentUser.points || 0) + CONFIG.GAME_CONFIG.DAILY_BONUS;
+                                appState.saveUserState();
+                            }
+                            localStorage.setItem('last_daily_bonus', today);
+                            showNotification(`+${CONFIG.GAME_CONFIG.DAILY_BONUS} điểm!`, 'success');
+                        }
+                    }
+                ]
+            });
+        }, 1500);
+    }
+}
+
+function showSearchModal() {
+    ui.prompt({
+        title: '🔍 Tìm kiếm',
+        message: 'Nhập từ khóa tìm kiếm',
+        placeholder: 'Bài tập, khóa học, đề thi...'
+    }).then(keyword => {
+        if (keyword) {
+            ui.showLoading('Đang tìm kiếm...');
+            setTimeout(() => {
+                ui.hideLoading();
+                showNotification(`Tìm kiếm "${keyword}" - Tính năng đang phát triển`, 'info');
+            }, 800);
+        }
+    });
+}
+
+function showShortcutsHelp() {
+    ui.showModal({
+        title: '⌨️ Phím tắt',
+        content: `
+            <div style="display: grid; gap: 10px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span><kbd>Ctrl</kbd> + <kbd>K</kbd></span>
+                    <span>Tìm kiếm</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span><kbd>Ctrl</kbd> + <kbd>/</kbd></span>
+                    <span>Hiển thị trợ giúp</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span><kbd>Esc</kbd></span>
+                    <span>Đóng hộp thoại</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span><kbd>←</kbd> / <kbd>→</kbd></span>
+                    <span>Chuyển câu hỏi</span>
+                </div>
+            </div>
+        `,
+        size: 'small',
+        buttons: [{ text: 'Đóng', primary: true }]
+    });
+}
+
+function checkForUpdates() {
+    // Check for app updates
+    const lastVersion = localStorage.getItem('app_version');
+    if (lastVersion !== CONFIG.VERSION) {
+        localStorage.setItem('app_version', CONFIG.VERSION);
+        setTimeout(() => {
+            showNotification(`Đã cập nhật lên phiên bản ${CONFIG.VERSION}!`, 'success');
+        }, 2000);
+    }
+}
+
+function preloadData() {
+    // Preload common data
+    setTimeout(() => {
+        // Preload courses
+        if (window.courses) {
+            console.log('📚 Preloaded courses:', window.courses.length);
+        }
+        // Preload exercises
+        if (window.exercises) {
+            console.log('📝 Preloaded exercises:', Object.keys(window.exercises).length);
+        }
+    }, 100);
+}
+
+// ============================================
+// PHẦN 16: EXPORT TO WINDOW
+// ============================================
+
+// Auth functions
+window.handleLogin = handleLogin;
+window.handleLogout = handleLogout;
+window.handleRegister = handleRegister;
+
+// Exercise functions
+window.saveAnswer = saveAnswer;
+window.goToQuestion = goToQuestion;
+window.nextQuestion = nextQuestion;
+window.prevQuestion = prevQuestion;
+window.submitExercise = submitExercise;
+
+// Exam functions
+window.startExam = startExam;
+window.saveExamAnswer = saveExamAnswer;
+window.goToExamQuestion = goToExamQuestion;
+window.nextExamQuestion = nextExamQuestion;
+window.prevExamQuestion = prevExamQuestion;
+window.toggleMarkQuestion = toggleMarkQuestion;
+window.submitExam = submitExam;
+
+// Utility functions
+window.showNotification = showNotification;
+window.formatCurrency = (amount) => amount?.toLocaleString('vi-VN') + 'đ';
+window.formatNumber = (num) => {
+    if (!num) return '0';
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+};
+
+// AI functions
+window.getRecommendations = () => {
+    if (appState.currentUser) {
+        return aiAssistant.getRecommendations(appState.currentUser.id);
+    }
+    return [];
+};
+
+// Analytics functions
+window.getPerformanceReport = (period) => {
+    if (appState.currentUser) {
+        return analytics.getPerformanceReport(appState.currentUser.id, period);
+    }
+    return null;
+};
+
+// ============================================
+// PHẦN 17: PAGE LOAD HANDLERS
+// ============================================
+
+function loadClassPage(classId) {
+    const container = document.querySelector('.main-content .container');
+    if (!container) return;
+    
+    const courses = window.courses?.filter(c => c.class === classId) || [];
+    
+    container.innerHTML = `
+        <h2>Lớp ${classId}</h2>
+        <div class="subject-grid">
+            <div class="subject-card" onclick="location.href='toan-${classId}.html'">
+                <i class="fas fa-calculator"></i>
+                <h3>Toán</h3>
+                <p>${courses.filter(c => c.subject === 'toan')[0]?.lessons || '--'} bài học</p>
+            </div>
+            <div class="subject-card" onclick="location.href='van-${classId}.html'">
+                <i class="fas fa-book"></i>
+                <h3>Tiếng Việt</h3>
+                <p>${courses.filter(c => c.subject === 'van')[0]?.lessons || '--'} bài học</p>
+            </div>
+            <div class="subject-card" onclick="location.href='anh-${classId}.html'">
+                <i class="fas fa-language"></i>
+                <h3>Tiếng Anh</h3>
+                <p>${courses.filter(c => c.subject === 'anh')[0]?.lessons || '--'} bài học</p>
+            </div>
+        </div>
     `;
 }
 
-function suggestNextSteps(score, examId) {
-    const suggestionsEl = document.querySelector('.suggestions');
-    if (!suggestionsEl) return;
+function loadSubjectPage(subject, classId) {
+    const container = document.querySelector('.main-content .container');
+    if (!container) return;
     
-    const exam = window.exams?.find(e => e.id == examId);
-    if (!exam) return;
+    const exercises = Object.values(window.exercises || {}).filter(ex => 
+        ex.subject === subject && ex.class === classId
+    );
     
-    let html = '<h3>Gợi ý cho bạn</h3><ul>';
+    const subjectNames = { toan: 'Toán', van: 'Tiếng Việt', anh: 'Tiếng Anh' };
     
-    if (score < 70) {
-        html += `<li><a href="toan-${exam.class}.html">Ôn lại kiến thức lớp ${exam.class}</a></li>`;
-    }
-    
-    html += `<li><a href="thi-thu.html?subject=${exam.subject}">Làm thêm đề thi môn ${exam.subjectName}</a></li>`;
-    html += `<li><a href="luyen-tap.html?subject=${exam.subject}&class=${exam.class}">Luyện tập theo chủ đề</a></li>`;
-    
-    if (score >= 90) {
-        html += `<li><a href="khoa-hoc.html?level=advanced">Khóa học nâng cao</a></li>`;
-    }
-    
-    html += '</ul>';
-    suggestionsEl.innerHTML = html;
+    container.innerHTML = `
+        <h2>${subjectNames[subject]} lớp ${classId}</h2>
+        <div class="exercise-list">
+            ${exercises.map(ex => `
+                <div class="exercise-item" onclick="location.href='bai-tap.html?id=${ex.id}'">
+                    <div>
+                        <h4>${ex.title}</h4>
+                        <p>${ex.questions} câu hỏi - ${ex.time} phút</p>
+                    </div>
+                    <span class="status ${ex.completed ? 'completed' : 'pending'}">
+                        ${ex.completed ? 'Đã hoàn thành' : 'Chưa làm'}
+                    </span>
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
-function loadStudyHistory() {
+function loadCoursesList() {
+    const container = document.getElementById('coursesList');
+    if (!container) return;
+    
+    const courses = window.courses || [];
+    
+    container.innerHTML = courses.map(course => `
+        <div class="course-card" onclick="location.href='${course.subject}-${course.class}.html'">
+            <div class="course-image">${course.image || '📚'}</div>
+            <h3>${course.name}</h3>
+            <p class="course-teacher">${course.teacher}</p>
+            <div class="course-meta">
+                <span><i class="fas fa-video"></i> ${course.lessons} bài</span>
+                <span><i class="fas fa-users"></i> ${window.formatNumber?.(course.students) || course.students}</span>
+            </div>
+            <div class="course-price">${window.formatCurrency?.(course.price) || course.price}</div>
+            <button class="btn-buy" onclick="event.stopPropagation(); location.href='mua-goi.html'">
+                Đăng ký
+            </button>
+        </div>
+    `).join('');
+}
+
+function loadExercisesList() {
+    const container = document.getElementById('exercisesList');
+    if (!container) return;
+    
+    const exercises = Object.values(window.exercises || {});
+    
+    container.innerHTML = exercises.map(ex => `
+        <div class="exercise-card" onclick="location.href='bai-tap.html?id=${ex.id}'">
+            <div class="exercise-header">
+                <h3>${ex.title}</h3>
+                <span class="subject-badge ${ex.subject}">${ex.subjectName} ${ex.class}</span>
+            </div>
+            <p>${ex.questions} câu - ${ex.time} phút</p>
+            <div class="progress-bar">
+                <div class="progress" style="width: ${ex.completed ? 100 : 0}%"></div>
+            </div>
+            <span class="status ${ex.completed ? 'completed' : 'pending'}">
+                ${ex.completed ? 'Đã hoàn thành' : 'Chưa làm'}
+            </span>
+        </div>
+    `).join('');
+}
+
+function loadExamsList() {
+    const container = document.getElementById('examsList');
+    if (!container) return;
+    
+    const exams = window.exams || [];
+    
+    container.innerHTML = exams.map(exam => `
+        <div class="exam-item" onclick="location.href='thi.html?id=${exam.id}'">
+            <div class="exam-info">
+                <h4>${exam.name}</h4>
+                <p><i class="far fa-clock"></i> ${exam.time} phút - ${exam.questions} câu</p>
+                <p class="exam-meta">${window.formatNumber?.(exam.attempts) || exam.attempts} lượt làm</p>
+            </div>
+            <span class="exam-tag">⭐ ${exam.rating}</span>
+        </div>
+    `).join('');
+}
+
+function loadRankingPage() {
+    const container = document.querySelector('.ranking-table tbody');
+    if (!container) return;
+    
+    const rankings = window.rankings?.week || [];
+    
+    container.innerHTML = rankings.map((item, index) => `
+        <tr class="${appState.currentUser?.name === item.name ? 'current-user' : ''}">
+            <td>${item.rank}</td>
+            <td>
+                <div class="rank-user">
+                    <span class="rank-avatar">${item.avatar}</span>
+                    ${item.name}
+                </div>
+            </td>
+            <td>${item.class}</td>
+            <td>${window.formatNumber?.(item.points) || item.points}</td>
+            <td>${item.school || 'TH Kim Đồng'}</td>
+        </tr>
+    `).join('');
+}
+
+function loadProfilePage() {
+    if (!appState.currentUser) return;
+    
+    const user = appState.currentUser;
+    
+    const fullName = document.getElementById('fullName');
+    const email = document.getElementById('email');
+    const phone = document.getElementById('phone');
+    const className = document.getElementById('class');
+    const school = document.getElementById('school');
+    
+    if (fullName) fullName.value = user.name;
+    if (email) email.value = user.email;
+    if (phone) phone.value = user.phone || '';
+    if (className) className.value = user.class?.replace('A', '') || '5';
+    if (school) school.value = user.school || '';
+}
+
+function loadPackagesPage() {
+    // Already handled by HTML
+}
+
+function loadPaymentPage() {
+    const pkg = JSON.parse(sessionStorage.getItem(CONFIG.STORAGE_KEYS.PACKAGE));
+    if (pkg) {
+        const packageName = document.getElementById('packageName');
+        const packagePrice = document.getElementById('packagePrice');
+        const totalPrice = document.getElementById('totalPrice');
+        
+        if (packageName) packageName.textContent = pkg.name;
+        if (packagePrice) packagePrice.textContent = window.formatCurrency?.(pkg.price) || pkg.price + 'đ';
+        if (totalPrice) totalPrice.textContent = window.formatCurrency?.(pkg.price) || pkg.price + 'đ';
+    }
+}
+
+function loadHistoryPage() {
     const container = document.getElementById('historyList');
     if (!container) return;
     
@@ -1678,518 +3797,72 @@ function loadStudyHistory() {
         return;
     }
     
-    let html = '';
-    history.forEach(item => {
-        html += `
-            <tr>
-                <td>${item.date}</td>
-                <td>${item.exercise}</td>
-                <td>${item.subjectName}</td>
-                <td>${item.class}</td>
-                <td>${item.score || 0}%</td>
-                <td>${item.timeSpent || item.time || '15 phút'}</td>
-            </tr>
-        `;
-    });
-    
-    container.innerHTML = html;
+    container.innerHTML = history.map(item => `
+        <tr>
+            <td>${window.formatDate?.(item.date) || item.date}</td>
+            <td>${item.exercise}</td>
+            <td>${item.subjectName || item.subject}</td>
+            <td>${item.class}</td>
+            <td>${item.score || 0}%</td>
+            <td>${item.timeSpent || '--'} phút</td>
+        </tr>
+    `).join('');
 }
 
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 11: XỬ LÝ KHÓA HỌC
-// ============================================
-
-function loadCourses() {
-    const container = document.getElementById('coursesList');
+function renderResultPage({ score, correct, total }) {
+    const container = document.querySelector('.result-container');
     if (!container) return;
     
-    const classFilter = document.getElementById('filterClass')?.value || 'all';
-    const subjectFilter = document.getElementById('filterSubject')?.value || 'all';
+    const scoreNum = parseInt(score) || 0;
+    const correctNum = parseInt(correct) || 0;
+    const totalNum = parseInt(total) || 5;
     
-    let courses = window.courses || [];
+    const scoreCircle = container.querySelector('.score-number');
+    const correctCount = container.querySelector('#correctCount');
+    const wrongCount = container.querySelector('#wrongCount');
     
-    if (classFilter !== 'all') {
-        courses = courses.filter(c => c.class == classFilter);
+    if (scoreCircle) scoreCircle.textContent = scoreNum;
+    if (correctCount) correctCount.textContent = correctNum;
+    if (wrongCount) {
+        const wrongEl = wrongCount.closest('.result-stat')?.querySelector('strong');
+        if (wrongEl) wrongEl.textContent = totalNum - correctNum;
     }
-    if (subjectFilter !== 'all') {
-        courses = courses.filter(c => c.subject === subjectFilter);
-    }
-    
-    if (courses.length === 0) {
-        container.innerHTML = '<div class="no-data">Không có khóa học nào</div>';
-        return;
-    }
-    
-    // Sắp xếp theo độ phổ biến
-    courses.sort((a, b) => b.students - a.students);
-    
-    let html = '';
-    courses.forEach(course => {
-        const progress = getCourseProgress(course.id);
-        html += `
-            <div class="course-card" onclick="location.href='${course.subject}-${course.class}.html'">
-                <div class="course-image">${course.image || '📚'}</div>
-                <h3>${course.name}</h3>
-                <p class="course-teacher">${course.teacher}</p>
-                <div class="course-meta">
-                    <span><i class="fas fa-video"></i> ${course.lessons} bài</span>
-                    <span><i class="fas fa-users"></i> ${formatNumber(course.students)} học sinh</span>
-                </div>
-                ${progress > 0 ? `
-                    <div class="course-progress">
-                        <div class="progress-bar">
-                            <div class="progress" style="width: ${progress}%"></div>
-                        </div>
-                        <span class="progress-text">${progress}% hoàn thành</span>
-                    </div>
-                ` : ''}
-                <div class="course-price">${formatCurrency(course.price)}</div>
-                <button class="btn-buy" onclick="event.stopPropagation(); selectPackage('${course.package || 'basic'}')">
-                    ${progress > 0 ? 'Tiếp tục học' : 'Đăng ký ngay'}
-                </button>
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html;
 }
 
-function getCourseProgress(courseId) {
-    if (!currentUser) return 0;
-    
-    const history = window.studyHistory || [];
-    const courseExercises = history.filter(h => h.exercise.includes(courseId));
-    
-    if (courseExercises.length === 0) return 0;
-    
-    const totalLessons = window.courses.find(c => c.id === courseId)?.lessons || 20;
-    return Math.min(100, Math.round((courseExercises.length / totalLessons) * 100));
-}
-
-function filterCourses() {
-    loadCourses();
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 12: XỬ LÝ BẢNG XẾP HẠNG
-// ============================================
-
-function loadRanking(period = 'week') {
-    const container = document.querySelector('.ranking-table tbody');
+function renderExamResultPage(data) {
+    const container = document.querySelector('.result-container');
     if (!container) return;
     
-    const rankings = window.rankings?.[period] || generateRankings(period);
+    const score = data.score || '0';
+    const correct = data.correct || '0';
+    const total = data.total || '0';
     
-    let html = '';
-    rankings.forEach((item, index) => {
-        const isCurrentUser = currentUser && item.name === currentUser.name;
-        html += `
-            <tr class="${isCurrentUser ? 'current-user' : ''}">
-                <td>${index + 1}</td>
-                <td>
-                    <div class="rank-user">
-                        <span class="rank-avatar">${item.avatar}</span>
-                        ${item.name}
-                    </div>
-                </td>
-                <td>${item.class}</td>
-                <td>${item.points.toLocaleString()}</td>
-                <td>${item.school || 'TH Kim Đồng'}</td>
-            </tr>
-        `;
-    });
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const correctCount = document.getElementById('correctCount');
+    const totalQuestions = document.getElementById('totalQuestions');
+    const wrongCount = document.getElementById('wrongCount');
     
-    container.innerHTML = html;
+    if (scoreDisplay) scoreDisplay.textContent = score;
+    if (correctCount) correctCount.textContent = correct;
+    if (totalQuestions) totalQuestions.textContent = total;
+    if (wrongCount) wrongCount.textContent = total - correct;
 }
 
-function generateRankings(period) {
-    const rankings = [];
-    const names = [
-        'Nguyễn Văn An', 'Trần Thị Bình', 'Lê Văn Cường', 'Phạm Thị Dung',
-        'Hoàng Văn Em', 'Ngô Thị Phương', 'Đỗ Văn Quân', 'Vũ Thị Trang',
-        'Lý Văn Sơn', 'Trịnh Thị Hoa', 'Bùi Thị Ngọc', 'Đặng Văn Hùng'
-    ];
-    
-    const classes = ['5A1', '5A2', '5A3', '4A1', '4A2', '4A3'];
-    const avatars = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M'];
-    
-    const multiplier = period === 'week' ? 1 : period === 'month' ? 4 : 12;
-    
-    for (let i = 0; i < 10; i++) {
-        rankings.push({
-            rank: i + 1,
-            name: names[i % names.length],
-            points: Math.floor(9500 + (10 - i) * 300 * multiplier + Math.random() * 100),
-            class: classes[i % classes.length],
-            avatar: avatars[i % avatars.length],
-            school: 'TH Kim Đồng'
-        });
-    }
-    
-    return rankings;
-}
-
-function switchRanking(period) {
-    const tabs = document.querySelectorAll('.ranking-tab');
-    tabs.forEach(tab => tab.classList.remove('active'));
-    
-    const activeTab = Array.from(tabs).find(tab => 
-        tab.textContent.toLowerCase().includes(period === 'week' ? 'tuần' : (period === 'month' ? 'tháng' : 'mọi'))
-    );
-    if (activeTab) activeTab.classList.add('active');
-    
-    loadRanking(period);
-}
 // ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 13: XỬ LÝ TÀI KHOẢN
+// PHẦN 18: INITIALIZE ON DOM READY
 // ============================================
 
-function loadProfile() {
-    if (!currentUser) return;
-    
-    const elements = {
-        fullName: document.getElementById('fullName'),
-        email: document.getElementById('email'),
-        phone: document.getElementById('phone'),
-        class: document.getElementById('class'),
-        school: document.getElementById('school'),
-        displayName: document.getElementById('profileName'),
-        displayClass: document.getElementById('profileClass')
-    };
-    
-    if (elements.fullName) elements.fullName.value = currentUser.name;
-    if (elements.email) elements.email.value = currentUser.email;
-    if (elements.phone) elements.phone.value = currentUser.phone || '';
-    if (elements.class) elements.class.value = currentUser.class?.replace('A', '') || '5';
-    if (elements.school) elements.school.value = currentUser.school || 'Trường Tiểu học Kim Đồng';
-    if (elements.displayName) elements.displayName.textContent = currentUser.name;
-    if (elements.displayClass) elements.displayClass.textContent = `Lớp ${currentUser.class}`;
-    
-    loadUserStats();
-    loadUserAchievementsDisplay();
-}
+document.addEventListener('DOMContentLoaded', () => {
+    initializeApp();
+});
 
-function loadUserStats() {
-    const statsContainer = document.querySelector('.user-stats');
-    if (!statsContainer) return;
-    
-    const history = window.studyHistory || [];
-    const examHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
-    
-    const totalExercises = history.length;
-    const totalExams = examHistory.length;
-    const avgScore = history.length ? 
-        Math.round(history.reduce((sum, h) => sum + (h.score || 0), 0) / history.length) : 0;
-    const bestScore = Math.max(...(history.map(h => h.score || 0)), 0);
-    
-    statsContainer.innerHTML = `
-        <div class="stat-item">
-            <span class="stat-value">${totalExercises}</span>
-            <span class="stat-label">Bài tập</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value">${totalExams}</span>
-            <span class="stat-label">Bài thi</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value">${avgScore}%</span>
-            <span class="stat-label">Điểm TB</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-value">${bestScore}%</span>
-            <span class="stat-label">Cao nhất</span>
-        </div>
-    `;
-}
-
-function loadUserAchievementsDisplay() {
-    const container = document.querySelector('.achievements-list');
-    if (!container) return;
-    
-    const allAchievements = window.achievementsList || [];
-    const unlockedSet = new Set(achievements.map(a => a.id));
-    
-    let html = '';
-    allAchievements.slice(0, 6).forEach(achievement => {
-        const unlocked = unlockedSet.has(achievement.id);
-        html += `
-            <div class="achievement-item ${unlocked ? 'unlocked' : 'locked'}">
-                <div class="achievement-icon">${achievement.icon || '🏆'}</div>
-                <div class="achievement-info">
-                    <h4>${achievement.name}</h4>
-                    <p>${achievement.description}</p>
-                </div>
-                ${unlocked ? '<span class="achievement-check">✅</span>' : ''}
-            </div>
-        `;
-    });
-    
-    container.innerHTML = html || '<p>Chưa có thành tích</p>';
-}
-
-function showProfileTab(tab) {
-    const tabs = document.querySelectorAll('.profile-menu a');
-    tabs.forEach(t => t.classList.remove('active'));
-    
-    const activeTab = Array.from(tabs).find(t => 
-        t.textContent.toLowerCase().includes(tab === 'info' ? 'thông tin' : 'mật khẩu')
-    );
-    if (activeTab) activeTab.classList.add('active');
-    
-    document.getElementById('infoTab')?.classList.remove('active');
-    document.getElementById('passwordTab')?.classList.remove('active');
-    
-    if (tab === 'info') {
-        document.getElementById('infoTab')?.classList.add('active');
-    } else {
-        document.getElementById('passwordTab')?.classList.add('active');
+// Handle page unload
+window.addEventListener('beforeunload', () => {
+    if (appState.currentExercise || appState.currentExam) {
+        appState.saveProgress();
     }
-}
+});
 
-function saveProfile() {
-    if (!currentUser) return;
-    
-    const fullName = document.getElementById('fullName')?.value;
-    const phone = document.getElementById('phone')?.value;
-    const classVal = document.getElementById('class')?.value;
-    const school = document.getElementById('school')?.value;
-    
-    if (fullName) currentUser.name = fullName;
-    if (phone) currentUser.phone = phone;
-    if (classVal) currentUser.class = classVal + 'A1';
-    if (school) currentUser.school = school;
-    
-    saveUserData();
-    updateUserInfo();
-    
-    showNotification('Thông tin đã được cập nhật!', 'success');
-}
-
-function changePassword() {
-    const current = document.getElementById('currentPassword')?.value;
-    const newPass = document.getElementById('newPassword')?.value;
-    const confirm = document.getElementById('confirmNewPassword')?.value;
-    
-    if (!current || !newPass || !confirm) {
-        showNotification('Vui lòng điền đầy đủ thông tin!', 'error');
-        return;
-    }
-    
-    if (newPass !== confirm) {
-        showNotification('Mật khẩu mới không khớp!', 'error');
-        return;
-    }
-    
-    if (newPass.length < 6) {
-        showNotification('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
-        return;
-    }
-    
-    // Kiểm tra mật khẩu cũ (giả lập)
-    if (current !== '123456' && currentUser?.username !== 'demo') {
-        showNotification('Mật khẩu hiện tại không đúng!', 'error');
-        return;
-    }
-    
-    showNotification('Đổi mật khẩu thành công!', 'success');
-    
-    document.getElementById('currentPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmNewPassword').value = '';
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 14: XỬ LÝ DỮ LIỆU HỌC TẬP
-// ============================================
-
-function saveStudyHistory(data) {
-    try {
-        let history = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY) || '[]');
-        history.push({
-            ...data,
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleString('vi-VN')
-        });
-        if (history.length > 100) history = history.slice(-100);
-        localStorage.setItem(CONFIG.STORAGE_KEYS.STUDY_HISTORY, JSON.stringify(history));
-        
-        // Cập nhật window.studyHistory
-        window.studyHistory = history;
-        
-        // Kiểm tra thành tựu
-        checkAchievements();
-    } catch (e) {
-        console.error('Error saving study history:', e);
-    }
-}
-
-function getRecommendations() {
-    if (!currentUser) return [];
-    
-    const history = window.studyHistory || [];
-    const examHistory = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEYS.EXAM_HISTORY) || '[]');
-    
-    // Phân tích điểm yếu
-    const weakSubjects = {};
-    const allSubjects = ['toan', 'van', 'anh'];
-    
-    allSubjects.forEach(subject => {
-        const subjectHistory = history.filter(h => h.subject === subject);
-        if (subjectHistory.length > 0) {
-            const avgScore = subjectHistory.reduce((sum, h) => sum + (h.score || 0), 0) / subjectHistory.length;
-            weakSubjects[subject] = avgScore;
-        }
-    });
-    
-    // Gợi ý bài học cho môn yếu nhất
-    const sortedSubjects = Object.entries(weakSubjects).sort((a, b) => a[1] - b[1]);
-    const weakest = sortedSubjects[0];
-    
-    if (weakest && weakest[1] < 70) {
-        return [{
-            type: 'subject',
-            subject: weakest[0],
-            message: `Bạn cần cải thiện môn ${getSubjectName(weakest[0])}`,
-            link: `luyen-tap.html?subject=${weakest[0]}`
-        }];
-    }
-    
-    return [];
-}
-
-function getSubjectName(subject) {
-    const names = {
-        toan: 'Toán',
-        van: 'Tiếng Việt',
-        anh: 'Tiếng Anh'
-    };
-    return names[subject] || subject;
-}
-
-function bookmarkExercise(exerciseId) {
-    if (!currentUser) return;
-    
-    let bookmarks = JSON.parse(localStorage.getItem(`${CONFIG.STORAGE_KEYS.BOOKMARKS}_${currentUser.id}`) || '[]');
-    
-    if (bookmarks.includes(exerciseId)) {
-        bookmarks = bookmarks.filter(id => id !== exerciseId);
-        showNotification('Đã xóa khỏi danh sách yêu thích', 'info');
-    } else {
-        bookmarks.push(exerciseId);
-        showNotification('Đã thêm vào danh sách yêu thích', 'success');
-    }
-    
-    localStorage.setItem(`${CONFIG.STORAGE_KEYS.BOOKMARKS}_${currentUser.id}`, JSON.stringify(bookmarks));
-}
-
-function addNote(exerciseId, note) {
-    if (!currentUser) return;
-    
-    let notes = JSON.parse(localStorage.getItem(`${CONFIG.STORAGE_KEYS.NOTES}_${currentUser.id}`) || '[]');
-    notes.push({
-        exerciseId: exerciseId,
-        note: note,
-        date: new Date().toISOString()
-    });
-    
-    localStorage.setItem(`${CONFIG.STORAGE_KEYS.NOTES}_${currentUser.id}`, JSON.stringify(notes));
-    showNotification('Đã lưu ghi chú', 'success');
-}
-// ============================================
-// SCRIPT.JS SIÊU THÔNG MINH - PHẦN 15: HÀM TIỆN ÍCH & EXPORT
-// ============================================
-
-function formatNumber(num) {
-    if (!num) return '0';
-    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-    return num.toString();
-}
-
-function formatTime(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('vi-VN');
-}
-
-function getUrlParam(param) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(param);
-}
-
-function addPageTransition() {
-    document.body.style.opacity = '0';
-    document.body.style.transition = 'opacity 0.3s';
-    setTimeout(() => {
-        document.body.style.opacity = '1';
-    }, 100);
-}
-
-function initializeAnimations() {
-    const style = document.createElement('style');
-    style.textContent = `
-        .q-nav-btn.answered {
-            background: #00b14f;
-            color: white;
-            border-color: #00b14f;
-        }
-        .no-data {
-            text-align: center;
-            padding: 50px;
-            color: #999;
-            font-size: 16px;
-        }
-        .progress {
-            transition: width 0.3s ease;
-        }
-        .course-card, .exercise-card, .exam-item {
-            transition: all 0.3s ease;
-        }
-        .course-card:hover, .exercise-card:hover, .exam-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,177,79,0.2);
-        }
-    `;
-    document.head.appendChild(style);
-}
-
-// Export functions cho HTML
-window.handleLogin = handleLogin;
-window.handleGoogleRegister = handleGoogleRegister;
-window.handleFacebookRegister = handleFacebookRegister;
-window.handleRegisterSubmit = handleRegisterSubmit;
-window.selectPackage = selectPackage;
-window.selectPayment = selectPayment;
-window.processPayment = processPayment;
-window.filterExercises = filterExercises;
-window.filterCourses = filterCourses;
-window.switchRanking = switchRanking;
-window.showProfileTab = showProfileTab;
-window.saveProfile = saveProfile;
-window.changePassword = changePassword;
-window.nextQuestion = nextQuestion;
-window.prevQuestion = prevQuestion;
-window.goToQuestion = goToQuestion;
-window.submitExercise = submitExercise;
-window.nextExamQuestion = nextExamQuestion;
-window.prevExamQuestion = prevExamQuestion;
-window.goToExamQuestion = goToExamQuestion;
-window.submitExam = submitExam;
-window.bookmarkExercise = bookmarkExercise;
-window.logout = logout;
-window.showNotification = showNotification;
-
-// Animation khi load trang
-addPageTransition();
-
-console.log('%c✅ SCRIPT.JS SIÊU THÔNG MINH LOADED!', 'color: #00b14f; font-size: 16px; font-weight: bold;');
-console.log('%c🔥 TEAM C00LKIDD, JOIN TODAY! 🔥', 'color: #00b14f; font-size: 20px; font-weight: bold;');
+console.log('%c✅ SCRIPT.JS SIÊU THÔNG MINH V5.0 LOADED!', 'color: #00b14f; font-size: 18px; font-weight: bold;');
+console.log('%c🔥 TEAM C00LKIDD - VIODU PLATFORM', 'color: #0088cc; font-size: 14px;');
+console.log('%c💡 Tip: Nhấn Ctrl+K để tìm kiếm nhanh!', 'color: #ffa502; font-size: 12px;');
