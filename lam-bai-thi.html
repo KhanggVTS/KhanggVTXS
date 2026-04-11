@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thi thử - VioEdu</title>
+    <title>Đang làm bài thi - VioEdu</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -20,7 +20,7 @@
                 <a href="dashboard.html">Trang chủ</a>
                 <a href="khoa-hoc.html">Khóa học</a>
                 <a href="luyen-tap.html">Luyện tập</a>
-                <a href="thi-thu.html" class="active">Thi thử</a>
+                <a href="thi-thu.html">Thi thử</a>
                 <a href="bang-xep-hang.html">Bảng xếp hạng</a>
             </div>
             <div class="user-info">
@@ -32,29 +32,37 @@
 
     <div class="main-content">
         <div class="container">
-            <h1>Thi thử</h1>
+            <div class="exam-header">
+                <h2 id="examTitle">Đề thi thử Toán lớp 5 - Tháng 3</h2>
+                <p id="examInfo">30 câu hỏi - Thời gian: 45 phút</p>
+            </div>
             
-            <div class="exam-categories">
-                <div class="category-card" onclick="filterExams('monthly')">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h3>Thi thử hàng tháng</h3>
-                    <p>Đề thi mới nhất theo từng tháng</p>
-                </div>
-                <div class="category-card" onclick="filterExams('final')">
-                    <i class="fas fa-flag-checkered"></i>
-                    <h3>Thi thử cuối kỳ</h3>
-                    <p>Ôn tập chuẩn bị cho kỳ thi</p>
-                </div>
-                <div class="category-card" onclick="filterExams('entrance')">
-                    <i class="fas fa-graduation-cap"></i>
-                    <h3>Thi thử chuyển cấp</h3>
-                    <p>Luyện thi vào lớp 6</p>
+            <div class="exam-timer">
+                <i class="far fa-clock"></i> Thời gian còn lại: <span id="timeDisplay">45:00</span>
+            </div>
+            
+            <div class="question-nav" id="questionNav">
+                <!-- JS sẽ render nút câu hỏi -->
+            </div>
+            
+            <div class="question-container" id="questionContainer">
+                <h3>Câu 1/30</h3>
+                <p class="question-text">Đang tải câu hỏi...</p>
+                <div class="options"></div>
+                <div class="question-nav-buttons">
+                    <button class="btn-prev" disabled>Câu trước</button>
+                    <button class="btn-next">Câu tiếp</button>
+                    <button class="btn-submit" style="display: none;">Nộp bài</button>
                 </div>
             </div>
-
-            <h2>Đề thi phổ biến</h2>
-            <div class="exams-list" id="examsList">
-                <!-- JS sẽ load dữ liệu -->
+            
+            <div class="exam-actions">
+                <button class="btn-mark" id="markBtn">
+                    <i class="far fa-flag"></i> Đánh dấu câu hỏi
+                </button>
+                <button class="btn-submit-exam" onclick="submitExam()">
+                    <i class="fas fa-check-circle"></i> Nộp bài
+                </button>
             </div>
         </div>
     </div>

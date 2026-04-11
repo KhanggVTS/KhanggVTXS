@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kết quả - VioEdu</title>
+    <title>Kết quả bài tập - VioEdu</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="header">
@@ -32,22 +33,80 @@
     <div class="main-content">
         <div class="container">
             <div class="result-container">
-                <h1>Kết quả bài làm</h1>
+                <div class="result-header">
+                    <h1>Kết quả bài tập</h1>
+                    <p class="exercise-name" id="exerciseNameResult">Phân số - Cơ bản</p>
+                </div>
                 
-                <div class="score-circle">
-                    <span class="score-number">80</span>
+                <div class="score-circle" id="scoreCircle">
+                    <span class="score-number" id="scoreDisplay">80</span>
                     <span class="score-label">điểm</span>
                 </div>
                 
                 <div class="result-details">
-                    <p><strong>Đúng:</strong> 4/5 câu</p>
-                    <p><strong>Thời gian:</strong> 15 phút 30 giây</p>
-                    <p><strong>Điểm tối đa:</strong> 100</p>
+                    <div class="result-stat">
+                        <i class="fas fa-check-circle" style="color: #00b14f;"></i>
+                        <span>Số câu đúng: <strong id="correctCount">4</strong>/<span id="totalQuestions">5</span></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-times-circle" style="color: #ff4757;"></i>
+                        <span>Số câu sai: <strong id="wrongCount">1</strong></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="far fa-clock"></i>
+                        <span>Thời gian làm bài: <strong id="timeSpent">15:30</strong></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-star"></i>
+                        <span>Điểm tối đa: <strong>100</strong></span>
+                    </div>
+                </div>
+                
+                <div class="result-feedback" id="resultFeedback">
+                    <h3>Nhận xét</h3>
+                    <p id="feedbackText">Bạn làm bài khá tốt! Câu số 3 cần xem lại kiến thức về phân số.</p>
+                </div>
+                
+                <div class="answer-review">
+                    <h3>Xem lại bài làm</h3>
+                    <div class="answer-list" id="answerReview">
+                        <div class="answer-item correct">
+                            <span class="question-number">Câu 1:</span>
+                            <span class="your-answer">Đáp án: B. 2 (Đúng ✓)</span>
+                        </div>
+                        <div class="answer-item correct">
+                            <span class="question-number">Câu 2:</span>
+                            <span class="your-answer">Đáp án: C. 8 (Đúng ✓)</span>
+                        </div>
+                        <div class="answer-item wrong">
+                            <span class="question-number">Câu 3:</span>
+                            <span class="your-answer">Đáp án: A. 1/4 (Sai ✗) - Đáp án đúng: B. 1/2</span>
+                        </div>
+                        <div class="answer-item correct">
+                            <span class="question-number">Câu 4:</span>
+                            <span class="your-answer">Đáp án: C. 5/4 (Đúng ✓)</span>
+                        </div>
+                        <div class="answer-item correct">
+                            <span class="question-number">Câu 5:</span>
+                            <span class="your-answer">Đáp án: B. 3/4 (Đúng ✓)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-suggestions">
+                    <h3>Gợi ý cho bạn</h3>
+                    <ul>
+                        <li><a href="#">Ôn lại bài: Phân số - Nâng cao</a></li>
+                        <li><a href="#">Xem video bài giảng về phép cộng phân số</a></li>
+                    </ul>
                 </div>
                 
                 <div class="result-actions">
                     <button class="btn-retry" onclick="location.href='bai-tap.html'">Làm lại</button>
-                    <button class="btn-back" onclick="location.href='luyen-tap.html'">Về danh sách</button>
+                    <button class="btn-back" onclick="location.href='luyen-tap.html'">Về danh sách bài tập</button>
+                    <button class="btn-next-exercise" onclick="location.href='bai-tap.html?id=toan-5-2'">
+                        Bài tiếp theo <i class="fas fa-arrow-right"></i>
+                    </button>
                 </div>
             </div>
         </div>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết đề thi - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="exam-detail-container">
+                <div class="exam-detail-header">
+                    <h1 id="detailExamName">Đề thi thử Toán lớp 5 - Tháng 3</h1>
+                    <div class="exam-meta-info">
+                        <span class="exam-badge toan">Toán</span>
+                        <span class="exam-badge">Lớp 5</span>
+                    </div>
+                </div>
+                
+                <div class="exam-info-grid">
+                    <div class="exam-info-card">
+                        <i class="fas fa-question-circle"></i>
+                        <div>
+                            <span class="info-label">Số câu hỏi</span>
+                            <span class="info-value" id="detailQuestions">30 câu</span>
+                        </div>
+                    </div>
+                    <div class="exam-info-card">
+                        <i class="far fa-clock"></i>
+                        <div>
+                            <span class="info-label">Thời gian</span>
+                            <span class="info-value" id="detailTime">45 phút</span>
+                        </div>
+                    </div>
+                    <div class="exam-info-card">
+                        <i class="fas fa-users"></i>
+                        <div>
+                            <span class="info-label">Lượt làm</span>
+                            <span class="info-value" id="detailAttempts">1,234 lượt</span>
+                        </div>
+                    </div>
+                    <div class="exam-info-card">
+                        <i class="fas fa-star"></i>
+                        <div>
+                            <span class="info-label">Đánh giá</span>
+                            <span class="info-value" id="detailRating">4.8/5</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="exam-description">
+                    <h3>Mô tả đề thi</h3>
+                    <p id="detailDescription">Đề thi thử theo cấu trúc mới nhất của Bộ Giáo dục, bám sát chương trình học kỳ 2 lớp 5. Đề thi bao gồm các dạng bài: phân số, số thập phân, hình học, tỉ số phần trăm.</p>
+                </div>
+                
+                <div class="exam-structure">
+                    <h3>Cấu trúc đề thi</h3>
+                    <ul id="detailStructure">
+                        <li><i class="fas fa-circle" style="color: #00b14f;"></i> Trắc nghiệm: 20 câu (mỗi câu 3 điểm)</li>
+                        <li><i class="fas fa-circle" style="color: #0088cc;"></i> Điền đáp án: 5 câu (mỗi câu 4 điểm)</li>
+                        <li><i class="fas fa-circle" style="color: #ffa502;"></i> Tự luận ngắn: 5 câu (mỗi câu 4 điểm)</li>
+                    </ul>
+                </div>
+                
+                <div class="exam-history" id="userExamHistory">
+                    <h3>Lịch sử làm bài của bạn</h3>
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Ngày làm</th>
+                                <th>Điểm</th>
+                                <th>Thời gian</th>
+                                <th>Xếp hạng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/03/2025</td>
+                                <td><span class="score-high">85</span></td>
+                                <td>32:15</td>
+                                <td>#42</td>
+                            </tr>
+                            <tr>
+                                <td>08/03/2025</td>
+                                <td><span class="score-medium">72</span></td>
+                                <td>40:20</td>
+                                <td>#128</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="exam-leaderboard">
+                    <h3>Bảng xếp hạng đề thi này</h3>
+                    <table class="ranking-table">
+                        <thead>
+                            <tr>
+                                <th>Hạng</th>
+                                <th>Học sinh</th>
+                                <th>Điểm</th>
+                                <th>Thời gian</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>🥇 1</td>
+                                <td>Nguyễn Văn An</td>
+                                <td>100</td>
+                                <td>25:30</td>
+                            </tr>
+                            <tr>
+                                <td>🥈 2</td>
+                                <td>Trần Thị Bình</td>
+                                <td>98</td>
+                                <td>28:15</td>
+                            </tr>
+                            <tr>
+                                <td>🥉 3</td>
+                                <td>Lê Văn Cường</td>
+                                <td>95</td>
+                                <td>30:00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="exam-start-section">
+                    <button class="btn-start-exam" onclick="startExam()">
+                        <i class="fas fa-play"></i> Bắt đầu làm bài
+                    </button>
+                    <p class="exam-note">Thời gian sẽ được tính từ khi bạn bắt đầu làm bài.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

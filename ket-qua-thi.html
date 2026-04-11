@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả bài thi - VioEdu</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2300b14f'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='20' font-weight='bold'%3EV%3C/text%3E%3C/svg%3E" alt="VioEdu">
+                    <span>VioEdu</span>
+                </a>
+            </div>
+            <div class="nav">
+                <a href="dashboard.html">Trang chủ</a>
+                <a href="khoa-hoc.html">Khóa học</a>
+                <a href="luyen-tap.html">Luyện tập</a>
+                <a href="thi-thu.html">Thi thử</a>
+                <a href="bang-xep-hang.html">Bảng xếp hạng</a>
+            </div>
+            <div class="user-info">
+                <span class="user-name">Nguyễn Văn An</span>
+                <div class="avatar">A</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="result-container">
+                <div class="result-header">
+                    <h1>Kết quả bài thi</h1>
+                    <p class="exam-name" id="examNameResult">Đề thi thử Toán lớp 5 - Tháng 3</p>
+                </div>
+                
+                <div class="score-circle" id="scoreCircle">
+                    <span class="score-number" id="scoreDisplay">85</span>
+                    <span class="score-label">điểm</span>
+                </div>
+                
+                <div class="result-details">
+                    <div class="result-stat">
+                        <i class="fas fa-check-circle" style="color: #00b14f;"></i>
+                        <span>Số câu đúng: <strong id="correctCount">25</strong>/<span id="totalQuestions">30</span></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-times-circle" style="color: #ff4757;"></i>
+                        <span>Số câu sai: <strong id="wrongCount">5</strong></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="far fa-clock"></i>
+                        <span>Thời gian làm bài: <strong id="timeSpent">32:15</strong></span>
+                    </div>
+                    <div class="result-stat">
+                        <i class="fas fa-trophy"></i>
+                        <span>Điểm đạt được: <strong id="pointsEarned">85</strong> điểm</span>
+                    </div>
+                </div>
+                
+                <div class="result-analysis" id="resultAnalysis">
+                    <h3>Phân tích kết quả</h3>
+                    <p id="analysisText">Bạn làm bài khá tốt! Cần cải thiện thêm phần phân số.</p>
+                </div>
+                
+                <div class="answer-review">
+                    <h3>Xem lại bài làm</h3>
+                    <div class="answer-list" id="answerReview">
+                        <!-- JS sẽ render đáp án -->
+                    </div>
+                </div>
+                
+                <div class="result-actions">
+                    <button class="btn-retry" onclick="location.href='lam-bai-thi.html'">Làm lại</button>
+                    <button class="btn-back" onclick="location.href='thi-thu.html'">Về danh sách đề thi</button>
+                    <button class="btn-share" onclick="shareResult()">
+                        <i class="fas fa-share-alt"></i> Chia sẻ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="container">
+            <p>© 2025 VioEdu</p>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
